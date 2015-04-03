@@ -1,16 +1,16 @@
 package ch.epfl.structure
 
-case class Structure(id: String, elements: List[String], energy: Double, pressure: Double, spaceGroup: SpaceGroup, unitCellFormula: Map[String, Double], struct: Struct, reducedCellFormula: Map[String, Double], nbElements: Double, nbSites: Double, chemsys: String, potential: Potential)
+case class Structure(id: String, elements: Seq[String], energy: Double, pressure: Double, spaceGroup: SpaceGroup, unitCellFormula: Map[String, Double], struct: Struct, reducedCellFormula: Map[String, Double], nbElements: Double, nbSites: Double, chemsys: String, potential: Potential)
 
-case class SpaceGroup(point_group: String, source: String, crystal_system: String, hall: String, symbol: String, number: Double)
+case class SpaceGroup(pointGroup: String, source: String, crystalSystem: String, hall: String, symbol: String, number: Double)
 
-case class Struct(sites: List[Site], lattice: Lattice)
+case class Struct(sites: Seq[Site], lattice: Lattice)
 
-case class Site(abc: List[Double], xyz: List[Double], species: List[Species])
+case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species])
 
-case class Species(ocu: Double, element: String)
+case class Species(occu: Double, element: String)
 
-case class Lattice(gamma: Double, a: Double, b: Double, c: Double, matrix: List[List[Double]], volume: Double, alpha: Double, beta: Double)
+case class Lattice(gamma: Double, a: Double, b: Double, c: Double, matrix: Seq[Seq[Double]], volume: Double, alpha: Double, beta: Double)
 
 case class Potential(name: String, params: Params)
 

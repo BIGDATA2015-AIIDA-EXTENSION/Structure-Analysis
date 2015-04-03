@@ -1,3 +1,5 @@
+package ch.epfl
+
 import ch.epfl.structure.StructureParser
 
 import scala.io.Source
@@ -10,6 +12,7 @@ object Main {
 
     val fileName = args(0)
     val source = Source fromFile fileName
+
     val structs = source getLines() flatMap StructureParser.parse
     structs foreach println
   }
