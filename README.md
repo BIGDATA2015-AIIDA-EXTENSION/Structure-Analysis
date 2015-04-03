@@ -6,5 +6,5 @@ A parser for Martin's structures.
 
 ```Scala
 sbt
-> run path/to/structures.json
+> run
 ```
