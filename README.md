@@ -8,3 +8,6 @@ A parser for Martin's structures.
 sbt
 > run
 ```
+
+## Caveats
+The project seems to compile only under java 1.8
