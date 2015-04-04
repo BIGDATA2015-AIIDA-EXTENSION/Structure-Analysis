@@ -4,7 +4,9 @@ version := "1.0"
 
 scalaVersion := "2.10.4" // cluster version of scala
 
-libraryDependencies += "com.typesafe.play" % "play-json_2.10" % "2.4.0-M3"
+resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
+
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.3.8"
 
 resourceDirectory in Compile := baseDirectory.value / "resources"
 
