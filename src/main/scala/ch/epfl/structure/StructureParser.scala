@@ -39,7 +39,7 @@ object StructureParser {
     (JsPath \ "crystal_system").read[String] and
     (JsPath \ "hall"          ).read[String] and
     (JsPath \ "symbol"        ).read[String] and
-    (JsPath \ "number"        ).read[Double]
+    (JsPath \ "number"        ).read[Int]
   )(SpaceGroup.apply _)
 
   private implicit val structureReads: Reads[Structure] = (
@@ -48,12 +48,15 @@ object StructureParser {
     (JsPath \ "energy"              ).read[Double] and
     (JsPath \ "pressure"            ).read[Double] and
     (JsPath \ "spacegroup"          ).read[SpaceGroup] and
-    (JsPath \ "unit_cell_formula"   ).read[Map[String, Double]] and
+    (JsPath \ "unit_cell_formula"   ).read[Map[String, Int]] and
     (JsPath \ "structure"           ).read[Struct] and
-    (JsPath \ "reduced_cell_formula").read[Map[String, Double]] and
-    (JsPath \ "nelements"           ).read[Double] and
-    (JsPath \ "nsites"              ).read[Double] and
+    (JsPath \ "reduced_cell_formula").read[Map[String, Int]] and
+    (JsPath \ "nelements"           ).read[Int] and
+    (JsPath \ "nsites"              ).read[Int] and
     (JsPath \ "chemsys"             ).read[String] and
-    (JsPath \ "potential"           ).read[Potential]
+    (JsPath \ "potential"           ).read[Potential] and
+    (JsPath \ "pretty_formula"      ).read[String] and
+    (JsPath \ "anonymous_formula"   ).read[String] and
+    (JsPath \ "energy_per_site"     ).read[Double]
   )(Structure.apply _)
 }
