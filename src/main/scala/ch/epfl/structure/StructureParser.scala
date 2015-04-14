@@ -1,5 +1,6 @@
 package ch.epfl.structure
 
+import scala.util.Try
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -11,11 +12,8 @@ import play.api.libs.functional.syntax._
  */
 object StructureParser {
 
-  def parse(line: String): Option[Structure] = {
-    val json = Json parse line
-    val result = json.validate[Structure]
-    result.asOpt
-  }
+  def parse(line: String): Option[Structure] =
+    Try(Json parse line).toOption flatMap (_.validate[Structure].asOpt)
 
   private implicit val paramReads = Json.reads[Param]
 
