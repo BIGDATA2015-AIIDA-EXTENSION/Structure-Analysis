@@ -39,7 +39,8 @@ case class Lattice(gamma: Double,
     alpha: Double,
     beta: Double)
 
-case class Potential(name: String, params: Params)
+case class Potential(name: String, params: Params, params_id: String)
+
 
 case class Params(aa: Param, bb: Param, ab: Param)
 

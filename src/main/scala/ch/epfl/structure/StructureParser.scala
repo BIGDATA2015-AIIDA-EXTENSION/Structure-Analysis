@@ -25,13 +25,18 @@ object StructureParser {
 
   private implicit val speciesReads = Json.reads[Species]
 
-  private implicit val potentialReads = Json.reads[Potential]
+  private implicit val potentialReads: Reads[Potential] = (
+      (JsPath \ "name").read[String] and
+      (JsPath \ "params").read[Params] and
+      (JsPath \ "params_id" \ "$oid").read[String]
+    ) (Potential.apply _)
 
   private implicit val siteReads = Json.reads[Site]
 
   private implicit val latticeReads = Json.reads[Lattice]
 
   private implicit val structReads = Json.reads[Struct]
+
 
   private implicit val spaceGroupReads: Reads[SpaceGroup] = (
     (JsPath \ "point_group"   ).read[String] and
