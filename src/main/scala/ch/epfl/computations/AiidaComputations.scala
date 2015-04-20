@@ -1,8 +1,7 @@
 package ch.epfl.computations
 
-import ch.epfl.structure.{Params, Structure, StructureParser}
+import ch.epfl.structure.{Params, Structure, StructureParser, Param}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
 import org.apache.spark.{SparkConf, SparkContext}
 
 object AiidaComputations {
@@ -11,8 +10,6 @@ object AiidaComputations {
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
-    val pairs = jsonStructures.map(s => (s,1))
-    val counts = pairs.reduceByKey((a, b) => a + b)
 
     val parsed = jsonStructures flatMap StructureParser.parse
 
@@ -28,6 +25,7 @@ object AiidaComputations {
     sc.stop()
   }
 
+
 }
 
 
@@ -40,7 +38,7 @@ case object BBSigma extends MapAxis
 case object BBEpsilon extends MapAxis
 
 
-case class MapID(cond1: Double, cond2: Double, prettyFormula: String)
+case class MapID(cond1: Double, cond2: Double, anonymousFormula: String, param : Param)
 
 case class MapElement(id: MapID, x: Double, y: Double, value: Int)
 
@@ -76,10 +74,10 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
 
     def groupCond(structure: Structure) = {
       val p = structure.potential.params
-      (getAxisValue(mapConds._1)(p), getAxisValue(mapConds._2)(p), structure.prettyFormula, getAxisValue(mapAxisX)(p), getAxisValue(mapAxisY)(p))
+      (getAxisValue(mapConds._1)(p), getAxisValue(mapConds._2)(p), structure.anonymousFormula, getAxisValue(mapAxisX)(p), getAxisValue(mapAxisY)(p), structure.potential.params.aa)
     }
 
-    val mapElems = getFilteredResults(rdd).groupBy(groupCond).map{ case (key, value) => MapElement(MapID(key._1, key._2, key._3), key._4, key._5, value.minBy(_.energyPerSite).spaceGroup.number) }
+    val mapElems = getFilteredResults(rdd).groupBy(groupCond).map{ case (key, value) => MapElement(MapID(key._1, key._2, key._3, key._6), key._4, key._5, value.minBy(_.energyPerSite).spaceGroup.number) }
     mapElems.groupBy(_.id).map{ case (k, v) => (k, v.toList.map(me => (me.x, me.y, me.value)))}
 
   }
