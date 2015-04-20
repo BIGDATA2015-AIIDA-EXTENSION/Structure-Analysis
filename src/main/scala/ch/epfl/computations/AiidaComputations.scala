@@ -1,6 +1,7 @@
 package ch.epfl.computations
 
-import ch.epfl.structure.{Struct, StructureParser}
+import ch.epfl.structure.{Params, Structure, Struct, StructureParser}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 object AiidaComputations {
@@ -14,18 +15,13 @@ object AiidaComputations {
 
     parsed.cache()
 
-    val groupByEnergy = parsed.groupBy(struct => Math.ceil(struct.energy / 5) * 5)
-    val groupByPressure = parsed.groupBy(struct => Math.ceil(struct.pressure / 0.5e-5) * 0.5e-5)
-    val groupBySimilarities = parsed.groupBy(rStr => rStr.unitCellFormula).map(couple => couple._2).flatMap(
-      l => l.map(
-        elm => l.filter(inelm => areSimilar(elm.struct, inelm.struct, 1))
-      )
-    )
+    val mapViewer = new MapViewer(List(AAEpsilon(1), ABEpsilon(1.5)))
 
-    groupByEnergy.saveAsTextFile(args(1) + "/energy")
-    groupByPressure.saveAsTextFile(args(1) + "/pressure")
-    groupBySimilarities.saveAsTextFile(args(1) + "/similarities")
+    val filteredSorted = mapViewer.getSortedResults(parsed)
 
+    println("######## "+filteredSorted.count())
+
+    filteredSorted.saveAsTextFile("hdfs:///user/lukas/project/output/")
     sc.stop()
   }
 
@@ -44,5 +40,41 @@ object AiidaComputations {
     val sites2 = struct2.sites
 
     sites1.forall(elm1 => sites2.exists(elm2 => distance(elm1.xyz, elm2.xyz) < errorMargin))
+  }
+}
+
+trait Condition {
+  def condition(p: Params): Boolean
+}
+
+case class AASigma(value: Double) extends Condition {
+  override def condition(p: Params): Boolean = p.aa.sigma == value
+}
+case class AAEpsilon(value: Double) extends Condition {
+  override def condition(p: Params): Boolean = p.aa.epsilon == value
+}
+case class BBSigma(value: Double) extends Condition {
+  override def condition(p: Params): Boolean = p.bb.sigma == value
+}
+case class BBEpsilon(value: Double) extends Condition {
+  override def condition(p: Params): Boolean = p.bb.epsilon == value
+}
+case class ABSigma(value: Double) extends Condition {
+  override def condition(p: Params): Boolean = p.ab.sigma == value
+}
+case class ABEpsilon(value: Double) extends Condition {
+  override def condition(p: Params): Boolean = p.ab.epsilon == value
+}
+
+
+class MapViewer(conds: List[Condition]) {
+  def getSortedResults(rdd: RDD[Structure]): RDD[Double] = {
+
+    def applyCond(conds: List[Condition], rdd: RDD[Structure]): RDD[Structure] = conds match {
+      case Nil => rdd
+      case cond :: tail => applyCond(tail, rdd.filter(s => cond.condition(s.potential.params)))
+    }
+
+    applyCond(conds, rdd).sortBy(s => s.energy).map(s => s.energy)
   }
 }
