@@ -45,6 +45,7 @@ object GraphMaker {
     lines.map(MapParser.parseEverything) foreach {
       case (k,v) => generatePlot(v, ABEpsilon, BBEpsilon, k)
     }
+    System.exit(0)
   }
   def generatePlot(mapPoints : List[(Double, Double, Int)], mapAxisX: MapAxis, mapAxisY: MapAxis, mapID: MapID): Unit = {
     val maxX = (mapPoints.maxBy(point => point._1)._1 * 10).toInt + 1
@@ -59,5 +60,7 @@ object GraphMaker {
     f.subplot(0).ylabel = "" + mapAxisY
     f.subplot(0) += image(m)
     f.saveas("plot" + mapID + ".png")
+    f.visible = false
+    f.clear()
   }
 }
