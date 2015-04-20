@@ -2,6 +2,7 @@ package ch.epfl.computations
 
 import ch.epfl.structure.{Params, Structure, StructureParser}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkContext._
 import org.apache.spark.{SparkConf, SparkContext}
 
 object AiidaComputations {
@@ -10,16 +11,21 @@ object AiidaComputations {
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
+    val pairs = jsonStructures.map(s => (s,1))
+    val counts = pairs.reduceByKey((a, b) => a + b)
 
     val parsed = jsonStructures flatMap StructureParser.parse
 
     parsed.cache()
 
-    val mapViewer = new MapViewer(List(AAEpsilon(1), ABEpsilon(1.5)), ABSigma, BBEpsilon)
+    val abSigma = 0.8
+    val bbSigma = 1
 
-    val groups = mapViewer.getMap(parsed)
+    val mapViewer = new MapViewer(List(ABSigma(abSigma), BBSigma(bbSigma)), ABEpsilon, BBEpsilon)
 
-    groups.saveAsTextFile("hdfs://" + args(1))
+    val groups = mapViewer.getMap(parsed).map(mapelm => mapelm.x + ", " + mapelm.y + ", " + mapelm.formula)
+
+    groups.saveAsTextFile("hdfs://" + args(1) + "/" + abSigma + "-" + bbSigma)
     sc.stop()
   }
 
@@ -72,7 +78,7 @@ case object BBEpsilon extends MapAxis {
 }
 
 
-
+case class MapElement(x: Double, y: Double, formula: String)
 
 case class MapViewer(conds: List[Condition], mapAxisX: MapAxis, mapAxisY: MapAxis) {
   private def getFilteredResults(rdd: RDD[Structure]): RDD[Structure] = {
@@ -85,11 +91,11 @@ case class MapViewer(conds: List[Condition], mapAxisX: MapAxis, mapAxisY: MapAxi
     applyCond(conds, rdd)
   }
 
-  def getMap(rdd: RDD[Structure]): RDD[((Double, Double), Structure)] = {
+  def getMap(rdd: RDD[Structure]): RDD[MapElement] = {
 
     def groupCond(structure: Structure) = (mapAxisX.getValue(structure), mapAxisY.getValue(structure))
 
-    getFilteredResults(rdd).groupBy(groupCond).map{ case (key, value) => (key, value.minBy(_.energyPerSite)) }
+    getFilteredResults(rdd).groupBy(groupCond).map{ case (key, value) => MapElement(key._1, key._2, value.minBy(_.energyPerSite).prettyFormula) }
   }
 
 }
