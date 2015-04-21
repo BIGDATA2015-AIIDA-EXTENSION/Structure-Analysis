@@ -1,6 +1,5 @@
 package ch.epfl
 
-import ch.epfl.computations.AiidaComputations._
 import ch.epfl.computations.GraphMaker._
 
 object Main {
