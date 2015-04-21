@@ -58,9 +58,9 @@ object GraphMaker {
     val f = Figure()
     f.subplot(0).xlabel = "" + mapAxisX
     f.subplot(0).ylabel = "" + mapAxisY
+    f.visible = false
     f.subplot(0) += image(m)
     f.saveas("plot" + mapID + ".png")
-    f.visible = false
     f.clear()
   }
 }
