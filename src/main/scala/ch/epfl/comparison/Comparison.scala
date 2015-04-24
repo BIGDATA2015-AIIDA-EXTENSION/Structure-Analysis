@@ -5,6 +5,13 @@ import breeze.linalg._
 
 object Comparator {
 
+  val maxCellMultiples = 256
+  val maxValues = 10000
+  val cutoffFactor = 1.001
+
+  implicit def lattice2UnitCell(lattice: Lattice): UnitCell =
+    UnitCell(DenseVector(lattice.matrix(0)), lattice.matrix(1), lattice.matrix(2), lattice.volume)
+
   case class UnitCell(a: DenseVector[Double], b: DenseVector[Double], c: DenseVector[Double], volume: Double) {
     val aCrossB = cross(a, b)
     val aCrossBLen = Math.sqrt(aCrossB dot aCrossB)
@@ -17,12 +24,16 @@ object Comparator {
     val aCrossC = cross(a, c)
     val aCrossCLen = Math.sqrt(aCrossC dot aCrossC)
     val aCrossCHat = aCrossC / aCrossCLen;
+
+    val cutoff = max(a.norm, b.norm, c.norm)
   }
 
   def distance(s1: Structure, s2: Structure): Double = {
-    // Could not figure out what is unitCell, maxCellMutiples, cutoff and maxValue
-    val ds1 = distances(s1, unitCell = ???, maxCellMultiples = ???, cutoff = ???, maxValues = ???)
-    val ds2 = distances(s2, unitCell = ???, maxCellMultiples = ???, cutoff = ???, maxValues = ???)
+    val unitCell1 = lattice2UnitCell(s1.struct.lattice)
+    val ds1 = distances(s1, unitCell = s1.struct.lattice, maxCellMultiples = maxCellMultiples, cutoff = unitCell1.cutoff, maxValues = maxValues)
+
+    val unitCell2 = lattice2UnitCell(s2.struct.lattice)
+    val ds2 = distances(s2, unitCell = s2.struct.lattice, maxCellMultiples = maxCellMultiples, cutoff = unitCell2.cutoff, maxValues = maxValues)
 
     // Not sure how to compute the difference between two set of list.
     // What order should be used, what about set/list of different size...
