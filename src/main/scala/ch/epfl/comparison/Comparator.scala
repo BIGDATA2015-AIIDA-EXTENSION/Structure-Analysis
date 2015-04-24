@@ -8,9 +8,13 @@ object Comparator {
   type ComparisonData = Map[(Species, Species), Seq[Double]]
 
   val MAX_CELL_MULTIPLES = 256
-  val MAX_VALUES = 10000
-  val CUTOFF_FACTOR = 1.001
+  val MAX_VALUES         = 10000
+  val CUTOFF_FACTOR      = 1.001
+  val TOLERANCE          = 3e-4
 
+  /**
+   * Used locally as a cache and an helper class
+   */
   private class UnitCell(lattice: Lattice) {
 
     val a = DenseVector(lattice.matrix(0).toArray)
@@ -43,18 +47,33 @@ object Comparator {
   }
 
   /**
-   * Compute the distance between two structures
+   * Return true if two structure are similar, false otherwise
+   */
+  def areSimilar(s1: Structure, s2: Structure): Boolean =
+    areSimilar(getCompData(s1), getCompData(s2))
+
+  /**
+   * Return true if two comparison data are similar, false otherwise
+   */
+  def areSimilar(ds1: ComparisonData, ds2: ComparisonData): Boolean =
+    distance(ds1, ds2) exists (_ < TOLERANCE)
+
+  /**
+   * If possible, compute the distance between two structures
    */
   def distance(s1: Structure, s2: Structure): Option[Double] = {
     if (s1.nbElements != s2.nbElements) None
     else if (s1.elements.toSet != s2.elements.toSet) None
-    else distance(distances(s1), distances(s2))
+    else distance(getCompData(s1), getCompData(s2))
   }
 
+  /**
+   * If possible, compute the distance between two comparison data
+   */
   def distance(ds1: ComparisonData, ds2: ComparisonData): Option[Double] = {
     if (ds1.keySet != ds2.keySet) None
     else {
-      // difference between the two sets of sequences
+      // Difference between the two sets of sequences
       val diff = ds1.toList flatMap {
         case (spec, dist1) =>
           val dist2 = ds2(spec)
@@ -70,26 +89,31 @@ object Comparator {
           }
       }
 
+      // Root mean square
       val rms = Math.sqrt(diff.map(Math.pow(_, 2)).sum / diff.length)
       Some(rms)
     }
   }
 
-
-  def distances(s: Structure): ComparisonData = {
+  /**
+   * Compute data used for comparison between structures
+   */
+  def getCompData(s: Structure): ComparisonData = {
     val unitCell = new UnitCell(s.struct.lattice)
     val combinations = (s.struct.sites combinations 2).toSeq
 
-    // Distances between all combinations of two atoms in a structure
-    val dists = combinations flatMap { case Seq(i, j) => distances(i, j, unitCell) }
+    // Generating the list of distances (up to some maximum) between atoms,
+    // one for each pair of species
+    val dists = combinations flatMap { case Seq(i, j) => getCompData(i, j, unitCell) }
 
+    // Group distances by pair of species and sort them
     dists groupBy (_._1) map { case (k, v) => (k, v.flatMap(_._2).sorted) }
   }
 
   /**
    * Compute the distances between two atoms
    */
-  private def distances(s1: Site, s2: Site, unitCell: UnitCell): Seq[((Species, Species), Seq[Double])] = {
+  private def getCompData(s1: Site, s2: Site, unitCell: UnitCell): Seq[((Species, Species), Seq[Double])] = {
     val cutoff = unitCell.cutoff
     val a = DenseVector(s1.abc.toArray)
     val b = DenseVector(s2.abc.toArray)
@@ -102,6 +126,7 @@ object Comparator {
 
     val cutoffSq = cutoff * cutoff
 
+    // Lazy evaluated since we want to compute distances only up to some maximum
     val resultStream = for {
       a <- (-aMax to aMax).toStream
       rA = a.toDouble * unitCell.a
@@ -118,6 +143,7 @@ object Comparator {
 
     val results = (resultStream take MAX_VALUES).toSeq
 
+    // One for each pair of species (A~A, A~B, B~B)
     for {
       spec1 <- s1.species
       spec2 <- s2.species
