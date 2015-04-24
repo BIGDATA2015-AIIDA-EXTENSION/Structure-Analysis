@@ -10,7 +10,7 @@ object Comparator {
   val cutoffFactor = 1.001
 
   implicit def lattice2UnitCell(lattice: Lattice): UnitCell =
-    UnitCell(DenseVector(lattice.matrix(0)), lattice.matrix(1), lattice.matrix(2), lattice.volume)
+    UnitCell(DenseVector(lattice.matrix(0).toArray), DenseVector(lattice.matrix(1).toArray), DenseVector(lattice.matrix(2).toArray), lattice.volume)
 
   case class UnitCell(a: DenseVector[Double], b: DenseVector[Double], c: DenseVector[Double], volume: Double) {
     val aCrossB = cross(a, b)
@@ -82,7 +82,8 @@ object Comparator {
         testDist
       }
 
-    results take maxValues
+    if (results.length < maxValues) results
+    else Seq()
   }
 
   def getNumPlaneRepetitionsToBoundSphere(radius: Double, volume: Double, crossLen: Double): Double = {
