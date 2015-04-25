@@ -1,4 +1,4 @@
-name := "structure-parser"
+name := "structure-analysis"
 
 version := "1.0"
 
