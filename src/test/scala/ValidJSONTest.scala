@@ -1,5 +1,6 @@
-import org.scalatest.FunSuite
 import ch.epfl.structure.StructureParser
+import org.scalatest.FunSuite
+
 import scala.io.Source
 
 class ValidJSONTest extends FunSuite {

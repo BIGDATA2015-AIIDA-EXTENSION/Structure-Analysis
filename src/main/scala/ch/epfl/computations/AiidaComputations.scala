@@ -11,8 +11,6 @@ object AiidaComputations {
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
-    val pairs = jsonStructures.map(s => (s,1))
-    val counts = pairs.reduceByKey((a, b) => a + b)
 
     val parsed = jsonStructures flatMap StructureParser.parse
 
@@ -23,24 +21,31 @@ object AiidaComputations {
 
     val groups = mapViewer.getMap(parsed)
 
-    groups.saveAsTextFile("hdfs://"+ args(1))
+    groups.saveAsTextFile("hdfs://" + args(1))
 
     sc.stop()
   }
+
 
 }
 
 
 trait MapAxis
+
 case object AASigma extends MapAxis
+
 case object AAEpsilon extends MapAxis
+
 case object ABSigma extends MapAxis
+
 case object ABEpsilon extends MapAxis
+
 case object BBSigma extends MapAxis
+
 case object BBEpsilon extends MapAxis
 
 
-case class MapID(cond1: Double, cond2: Double, prettyFormula: String)
+case class MapID(cond1: Double, cond2: Double, anonymousFormula: String)
 
 case class MapElement(id: MapID, x: Double, y: Double, value: Int)
 
@@ -55,6 +60,7 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
     case ABEpsilon => p.ab.epsilon
   }
 
+
   private def condition(mapAxis: MapAxis, value: Double, p: Params): Boolean = {
     getAxisValue(mapAxis, p) == value
   }
@@ -65,8 +71,9 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
 
     def combinedCondition(conds: List[(Double, Double)]): Structure => Boolean = conds match {
       case Nil => sys.error("error")
-      case (c1, c2) :: Nil => s:Structure => condition(mapConds._1, c1, s.potential.params) && condition(mapConds._2, c2, s.potential.params)
-      case (c1, c2) :: tail => s:Structure => (condition(mapConds._1, c1, s.potential.params) && condition(mapConds._2, c2, s.potential.params)) | combinedCondition(tail)(s)
+      case (c1, c2) :: Nil => s: Structure => condition(mapConds._1, c1, s.potential.params) && condition(mapConds._2, c2, s.potential.params)
+      case (c1, c2) :: tail => s: Structure => (condition(mapConds._1, c1, s.potential.params) && condition(mapConds._2, c2, s.potential.params)) | combinedCondition(tail)(s)
+
     }
     rdd.filter(combinedCondition(conds))
   }
@@ -88,10 +95,11 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
     val usefulStructures = getFilteredResults(rdd)
     val structuresMappedToKeyValue: RDD[(String, Structure)] = usefulStructures.map(s => (s.potential.params_id, s))
 
-    val structuresWithMinEnergy = structuresMappedToKeyValue.reduceByKey{ case (s1, s2) => if (s1.energyPerSite < s2.energyPerSite) s1 else s2 }
+    val structuresWithMinEnergy = structuresMappedToKeyValue.reduceByKey { case (s1, s2) => if (s1.energyPerSite < s2.energyPerSite) s1 else s2 }
 
-    structuresWithMinEnergy.map{ case (param_id, struct) => (structToMapID(struct), structToMapElement(struct)) }
-      .groupBy(_._1).map{ case (id, iter) => (id, iter.map{ case (k, v) => (v.x, v.y, v.value)}.toList) }
+    structuresWithMinEnergy.map { case (param_id, struct) => (structToMapID(struct), structToMapElement(struct)) }
+      .groupBy(_._1).map { case (id, iter) => (id, iter.map { case (k, v) => (v.x, v.y, v.value) }.toList) }
+
 
   }
 
