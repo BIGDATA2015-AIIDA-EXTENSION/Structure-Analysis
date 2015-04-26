@@ -1,8 +1,8 @@
 package ch.epfl.computations
 
-import ch.epfl.structure.{Params, Structure, StructureParser}
-import org.apache.spark.rdd.RDD
+import ch.epfl.structure._
 import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 object AiidaComputations {
@@ -46,17 +46,17 @@ case class MapElement(id: MapID, x: Double, y: Double, value: Int)
 
 case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis), mapAxisX: MapAxis, mapAxisY: MapAxis) {
 
-  private def getAxisValue(mapAxis: MapAxis): Params => Double = mapAxis match {
-    case AASigma => p: Params => p.aa.sigma
-    case AAEpsilon => p: Params => p.aa.epsilon
-    case BBSigma => p: Params => p.bb.sigma
-    case BBEpsilon => p: Params => p.bb.epsilon
-    case ABSigma => p: Params => p.ab.sigma
-    case ABEpsilon => p: Params => p.ab.epsilon
+  private def getAxisValue(mapAxis: MapAxis, p: Params): Double = mapAxis match {
+    case AASigma => p.aa.sigma
+    case AAEpsilon => p.aa.epsilon
+    case BBSigma => p.bb.sigma
+    case BBEpsilon => p.bb.epsilon
+    case ABSigma => p.ab.sigma
+    case ABEpsilon => p.ab.epsilon
   }
 
-  private def condition(mapAxis: MapAxis, value: Double):Params => Boolean = {
-    p: Params => getAxisValue(mapAxis)(p) == value
+  private def condition(mapAxis: MapAxis, value: Double, p: Params): Boolean = {
+    getAxisValue(mapAxis, p) == value
   }
 
 
@@ -65,8 +65,8 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
 
     def combinedCondition(conds: List[(Double, Double)]): Structure => Boolean = conds match {
       case Nil => sys.error("error")
-      case (c1, c2) :: Nil => s:Structure => condition(mapConds._1, c1)(s.potential.params) && condition(mapConds._2, c2)(s.potential.params)
-      case (c1, c2) :: tail => s:Structure => (condition(mapConds._1, c1)(s.potential.params) && condition(mapConds._2, c2)(s.potential.params)) | combinedCondition(tail)(s)
+      case (c1, c2) :: Nil => s:Structure => condition(mapConds._1, c1, s.potential.params) && condition(mapConds._2, c2, s.potential.params)
+      case (c1, c2) :: tail => s:Structure => (condition(mapConds._1, c1, s.potential.params) && condition(mapConds._2, c2, s.potential.params)) | combinedCondition(tail)(s)
     }
     rdd.filter(combinedCondition(conds))
   }
@@ -76,11 +76,22 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
 
     def groupCond(structure: Structure) = {
       val p = structure.potential.params
-      (getAxisValue(mapConds._1)(p), getAxisValue(mapConds._2)(p), structure.prettyFormula, getAxisValue(mapAxisX)(p), getAxisValue(mapAxisY)(p))
+      (getAxisValue(mapConds._1, p), getAxisValue(mapConds._2, p), structure.prettyFormula, getAxisValue(mapAxisX, p), getAxisValue(mapAxisY, p))
     }
 
-    val mapElems = getFilteredResults(rdd).groupBy(groupCond).map{ case (key, value) => MapElement(MapID(key._1, key._2, key._3), key._4, key._5, value.minBy(_.energyPerSite).spaceGroup.number) }
-    mapElems.groupBy(_.id).map{ case (k, v) => (k, v.toList.map(me => (me.x, me.y, me.value)))}
+    def structToMapID(struct: Structure): MapID =
+      MapID(getAxisValue(mapConds._1, struct.potential.params), getAxisValue(mapConds._2, struct.potential.params), struct.prettyFormula)
+
+    def structToMapElement(struct: Structure): MapElement =
+      MapElement(structToMapID(struct), getAxisValue(mapAxisX, struct.potential.params), getAxisValue(mapAxisY, struct.potential.params), struct.spaceGroup.number)
+
+    val usefulStructures = getFilteredResults(rdd)
+    val structuresMappedToKeyValue: RDD[(String, Structure)] = usefulStructures.map(s => (s.potential.params_id, s))
+
+    val structuresWithMinEnergy = structuresMappedToKeyValue.reduceByKey{ case (s1, s2) => if (s1.energyPerSite < s2.energyPerSite) s1 else s2 }
+
+    structuresWithMinEnergy.map{ case (param_id, struct) => (structToMapID(struct), structToMapElement(struct)) }
+      .groupBy(_._1).map{ case (id, iter) => (id, iter.map{ case (k, v) => (v.x, v.y, v.value)}.toList) }
 
   }
 

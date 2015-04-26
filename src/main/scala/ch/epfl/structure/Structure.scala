@@ -45,3 +45,5 @@ case class Potential(name: String, params: Params, params_id: String)
 case class Params(aa: Param, bb: Param, ab: Param)
 
 case class Param(cut: Double, epsilon: Double, m: Int, n: Int, sigma: Double)
+
+
