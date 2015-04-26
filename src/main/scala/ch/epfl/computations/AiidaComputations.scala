@@ -83,7 +83,7 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
 
     def groupCond(structure: Structure) = {
       val p = structure.potential.params
-      (getAxisValue(mapConds._1, p), getAxisValue(mapConds._2, p), structure.prettyFormula, getAxisValue(mapAxisX, p), getAxisValue(mapAxisY, p))
+      (getAxisValue(mapConds._1, p), getAxisValue(mapConds._2, p), structure.anonymousFormula, getAxisValue(mapAxisX, p), getAxisValue(mapAxisY, p), structure.potential.params.aa)
     }
 
     def structToMapID(struct: Structure): MapID =
@@ -93,7 +93,7 @@ case class MapViewer(conds: List[(Double, Double)], mapConds: (MapAxis, MapAxis)
       MapElement(structToMapID(struct), getAxisValue(mapAxisX, struct.potential.params), getAxisValue(mapAxisY, struct.potential.params), struct.spaceGroup.number)
 
     val usefulStructures = getFilteredResults(rdd)
-    val structuresMappedToKeyValue: RDD[(String, Structure)] = usefulStructures.map(s => (s.potential.params_id, s))
+    val structuresMappedToKeyValue = usefulStructures.map(s => (groupCond(s), s))
 
     val structuresWithMinEnergy = structuresMappedToKeyValue.reduceByKey { case (s1, s2) => if (s1.energyPerSite < s2.energyPerSite) s1 else s2 }
 

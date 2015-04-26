@@ -1,6 +1,7 @@
 package ch.epfl.computations
 
 import breeze.linalg.DenseMatrix
+import breeze.plot._
 import ch.epfl.structure.Param
 
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
@@ -25,8 +26,8 @@ object GraphMaker {
       case a ~ "," ~ b ~ "," ~ c ~ "," ~ d ~ "," ~ e => Param(a, b, c.toInt, d.toInt, e)
     }
 
-    val parseMapID: Parser[MapID] = "MapID" ~ "(" ~> doubleParser ~ "," ~ doubleParser ~ "," ~ ident ~ "," ~ parseParam <~ ")" ^^ {
-      case a ~ "," ~ b ~ "," ~ c ~ "," ~ d => MapID(a, b, c, d)
+    val parseMapID: Parser[MapID] = "MapID" ~ "(" ~> doubleParser ~ "," ~ doubleParser ~ "," ~ ident <~ ")" ^^ {
+      case a ~ "," ~ b ~ "," ~ c  => MapID(a, b, c)
     }
 
     val genParse: Parser[(MapID, List[(Double, Double, Int)])] = "(" ~> parseMapID ~ "," ~ parseList <~ ")" ^^ {
