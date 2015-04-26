@@ -15,7 +15,45 @@ case class Structure(
     potential: Potential,
     prettyFormula: String,
     anonymousFormula: String,
-    energyPerSite: Double)
+    energyPerSite: Double){
+
+}
+
+object Structure {
+  def convertIvano(ivanoStructure: StructureIvano) = {
+    val id = ivanoStructure.uuid
+    val elements = ???
+    val energy = ???
+    val pressure = ???
+    val spaceGroup = ???
+    val unitCellFormula = ???
+    val struct = convertIvanoStruct()
+    val reducedCellFormula = ???
+    val nbElements = ???
+    val nbSites = ???
+    val chemsys = ???
+    val potential = ???
+    val prettyFormula = ???
+    val anonymousFormula = ???
+    val energyPerSite = ???
+
+    Structure(id, elements, energy, pressure, spaceGroup,
+    unitCellFormula, struct, reducedCellFormula, nbElements,
+    nbSites, chemsys, potential, prettyFormula, anonymousFormula,
+    energyPerSite)
+
+
+}
+  def convertIvanoSite(site: SiteIvano) = {
+    ???
+  }
+
+  def convertIvanoStruct() = {
+    ???
+  }
+}
+
+
 
 case class SpaceGroup(pointGroup: String,
     source: String,
