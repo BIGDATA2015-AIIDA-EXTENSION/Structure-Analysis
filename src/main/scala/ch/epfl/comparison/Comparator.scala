@@ -84,7 +84,7 @@ object Comparator {
           ((v1 zip v2) foldLeft List.empty[Double]) {
             case (acc, (d1, d2)) =>
               val sum = d1 + d2
-              if (sum > 0)  (2 * Math.abs(d1 - d2) / sum) :: acc
+              if (sum > 0) (2 * Math.abs(d1 - d2) / sum) :: acc
               else acc
           }
       }
@@ -100,11 +100,15 @@ object Comparator {
    */
   def getCompData(s: Structure): ComparisonData = {
     val unitCell = new UnitCell(s.struct.lattice)
-    val combinations = (s.struct.sites combinations 2).toSeq
+    val sites = s.struct.sites
+    val combinations = for {
+      s1 <- sites
+      s2 <- sites
+    } yield (s1, s2)
 
     // Generating the list of distances (up to some maximum) between atoms,
     // one for each pair of species
-    val dists = combinations flatMap { case Seq(i, j) => getCompData(i, j, unitCell) }
+    val dists = combinations.toSeq flatMap { case (i, j) => getCompData(i, j, unitCell) }
 
     // Group distances by pair of species and sort them
     dists groupBy (_._1) map { case (k, v) => (k, v.flatMap(_._2).sorted) }
@@ -135,10 +139,9 @@ object Comparator {
       c <- -cMax to cMax
       outVec = rAB + unitCell.c * c.toDouble + dR
       testDistSq = outVec dot outVec
-      testDist = Math.sqrt(testDistSq)
       if testDistSq < cutoffSq
     } yield {
-        testDist
+        Math.sqrt(testDistSq)
     }
 
     val results = (resultStream take MAX_VALUES).toSeq
