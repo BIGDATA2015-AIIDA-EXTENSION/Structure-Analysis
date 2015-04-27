@@ -38,7 +38,7 @@ object Comparator {
 
     private def helper(crossHat: DenseVector[Double], crossLen: Double)(dR: DenseVector[Double]) = {
       val radius = cutoff + Math.abs(dR dot crossHat)
-      (Math.floor(radius / volume * crossLen) max MAX_CELL_MULTIPLES).toInt
+      (Math.floor(radius / volume * crossLen) min MAX_CELL_MULTIPLES).toInt
     }
 
     def aMax(dR: DenseVector[Double]): Int = helper(bCrossCHat, bCrossCLen)(dR)
@@ -129,11 +129,11 @@ object Comparator {
     // Lazy evaluated since we want to compute distances only up to some maximum
     val resultStream = for {
       a <- (-aMax to aMax).toStream
-      rA = a.toDouble * unitCell.a
+      rA = unitCell.a * a.toDouble
       b <- -bMax to bMax
-      rAB = rA + b.toDouble * unitCell.b
+      rAB = rA + unitCell.b * b.toDouble
       c <- -cMax to cMax
-      outVec = rAB + c.toDouble * unitCell.c + dR
+      outVec = rAB + unitCell.c * c.toDouble + dR
       testDistSq = outVec dot outVec
       testDist = Math.sqrt(testDistSq)
       if testDistSq < cutoffSq

@@ -4,6 +4,8 @@ import ch.epfl.comparison.Comparator
 import ch.epfl.structure.StructureParser
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.io.Source
+
 object Main {
   def main(args: Array[String]) {
     val fileName = "/projects/aiida/structures.json"
@@ -36,4 +38,18 @@ object Main {
 
     distances.toList foreach println
   }
+
+  // def main(args: Array[String]) {
+  //   val fileName = getClass getResource "/structures.json"
+  //   val source = Source fromURL fileName
+
+  //   val structs = source getLines() flatMap StructureParser.parse
+  //   val comparables = structs.toList groupBy (s => (s.nbSites, s.prettyFormula)) map (_._2) filter (_.length > 2)
+
+  //   comparables flatMap { cs =>
+  //     cs combinations 2 take 10 map {
+  //       case List(s1, s2) => (s1.id, s2.id) -> Comparator.distance(s1, s2)
+  //     }
+  //   }
+  // }
 }
