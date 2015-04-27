@@ -18,6 +18,7 @@ object StructureParserIvano {
     result <- json.validate[StructureIvano].asOpt
   } yield result
 
+
   def parseDebug(line: String): Unit = {
     val json = Json.parse(line)
     val result = json.validate[StructureIvano]
@@ -33,6 +34,7 @@ object StructureParserIvano {
   private implicit val structureIvanoReads: Reads[StructureIvano] = (
     (JsPath \ "uuid"                ).read[String] and
       (JsPath \ "cell"                ).read[Seq[Seq[Double]]] and
+      (JsPath \ "cell_volume"         ).read[Double] and
       (JsPath \ "sites"                ).read[Seq[SiteIvano]] and
       (JsPath \ "pbc"                ).read[Seq[Boolean]]
   )(StructureIvano.apply _)
