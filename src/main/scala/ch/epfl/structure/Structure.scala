@@ -20,6 +20,17 @@ case class Structure(
 }
 
 object Structure {
+  /*
+  Converts structure from ivano.tar.gz aiida db
+
+  Done:
+structure.sites.abc.Seq[Double]
+structure.sites.xyz.Seq[Double]
+structure.lattice.matrix.Seq[Seq[Double]] structure.lattice.volume.[Double]
+Missing but used in comparator:
+specimen
+nbElement (nelements)
+   */
   def convertIvano(ivanoStructure: StructureIvano) = {
     val id = ivanoStructure.uuid
     val elements = null
@@ -48,6 +59,8 @@ object Structure {
   def convertIvanoSite(ivanoStructure: StructureIvano) = {
       val abc: Seq[(Double)] = ivanoStructure.sites(0).position
       val xyz: Seq[(Double)] = ivanoStructure.sites(1).position
+
+      // is it correct to map both Tc to abc, xyz, is it always just 2 Tc
 
       val species = null
 
