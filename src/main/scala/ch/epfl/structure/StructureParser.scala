@@ -13,8 +13,10 @@ import scala.util.Try
  */
 object StructureParser {
 
-  def parse(line: String): Option[Structure] =
-    Try(Json parse line).toOption flatMap (_.validate[Structure].asOpt)
+  def parse(line: String): Option[Structure] = for {
+    json <- Try(Json parse line).toOption
+    result <- json.validate[Structure].asOpt
+  } yield result
 
   private implicit val paramReads = Json.reads[Param]
 

@@ -17,6 +17,7 @@ object AiidaComputations {
     parsed.cache()
 
 
+
     val mapViewer = new MapViewer(List((0.4, 1.0), (0.6, 1.0), (0.8, 1.0), (1.0, 1.0), (1.2, 1.0), (1.4, 1.0), (1.6, 1.0), (1.1, 1.0)), (ABSigma, BBSigma), ABEpsilon, BBEpsilon)
 
     val groups = mapViewer.getMap(parsed)
