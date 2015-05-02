@@ -4,42 +4,42 @@ import ch.epfl.structure.{StructureIvano, Structure, StructureParserIvano, Struc
 
 import scala.io.Source
 
+import play.api.libs.json._
+
+import sext._
+
 object Main {
   def main(args: Array[String]) {
-//    val fileName1 = getClass getResource "/structures.json"
-//
-//    val source1 = Source fromURL fileName1
-//
-//    val structs1 = source1 getLines() flatMap StructureParser.parse
-//    structs1 foreach println
 
-// ------
-//
-//    val fileName2 = getClass getResource "/structures_ivano.json"
+
+// ------ Get all records from a file
+
+//    val fileName2 = getClass getResource "/structures_ivano_new_no_NaN.json"
 //    val source2 = Source fromURL fileName2
 //
 //    val structs2 = source2 getLines() flatMap { x: String =>
-//          println(x)
+//          //println(x)
 //          StructureParserIvano.parse(x)
 //        }
-//    structs2 foreach println
+////    structs2 foreach println
+//
+//    for ( s <- structs2) {
+//      println(s)
+//      Structure.convertIvano(s);
+//    }
 
-    //----
+    //---- Get a single record from a file
 //
 
-    val fileName2 = getClass getResource "/structures_ivano_new.json"
-    val source2 = Source fromURL fileName2
-    val test = source2.getLines().next()
-    val test1 = StructureParserIvano.parseDebug(test)
-
-//    val s = test1.get
-//    println (test)
-    println (test1)
-
-
-    //Structure.convertIvano(test1);
-
-    //println(test1)
+    val fileName3 = getClass getResource "/structures_ivano_new_no_NaN.json"
+    val source3 = Source fromURL fileName3
+    val testjson3 = source3.getLines().next()
+    val testobject3 = StructureParserIvano.parse(testjson3)
+    println(testjson3)
+    for (s <- testobject3) {
+      println(s)
+      println(Structure.convertIvano(s).valueTreeString)
+    }
 
   }
 }

@@ -19,11 +19,10 @@ object StructureParserIvano {
   } yield result
 
 
+
   def parseDebug(line: String): Unit = {
     val json = Json.parse(line)
-    println(json)
     val result = json.validate[StructureIvano]
-    println(result)
   }
 
   private implicit val propertiesIvanoReads = Json.reads[PropertiesIvano]

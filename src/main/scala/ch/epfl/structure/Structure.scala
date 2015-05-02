@@ -1,5 +1,7 @@
 package ch.epfl.structure
 
+import scala.collection.mutable.MutableList
+
 case class Structure(
     id: String,
     elements: Seq[String],
@@ -59,14 +61,16 @@ nbElement (nelements)
   //def convertIvanoSite(site: SiteIvano) = {
   def convertIvanoSite(ivanoStructure: StructureIvano) = {
       println("convertIvanoSite")
-      val abc: Seq[(Double)] = ivanoStructure.sites(0).position
-      val xyz: Seq[(Double)] = ivanoStructure.sites(1).position
+      //val abc: Seq[(Double)] = ivanoStructure.sites(0).position
 
-      // is it correct to map both Tc to abc, xyz, is it always just 2 Tc - NO
+      val l = MutableList[Site]()
 
-      val species = null
-
-      Site(abc,xyz,species)::Nil
+      for ( site <- ivanoStructure.sites) {
+        val xyz: Seq[(Double)] = site.position
+        val species = List(Species(0, site.kindName))
+        l += Site(List(0.0,0.0,0.0), xyz ,species)
+      }
+      l
   }
 
   def convertIvanoStruct(ivanoStructure: StructureIvano) = {
