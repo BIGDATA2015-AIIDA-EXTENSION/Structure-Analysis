@@ -32,6 +32,7 @@ specimen
 nbElement (nelements)
    */
   def convertIvano(ivanoStructure: StructureIvano) = {
+    println("convertIvano")
     val id = ivanoStructure.uuid
     val elements = null
     val energy = 0.0
@@ -57,10 +58,11 @@ nbElement (nelements)
 
   //def convertIvanoSite(site: SiteIvano) = {
   def convertIvanoSite(ivanoStructure: StructureIvano) = {
+      println("convertIvanoSite")
       val abc: Seq[(Double)] = ivanoStructure.sites(0).position
       val xyz: Seq[(Double)] = ivanoStructure.sites(1).position
 
-      // is it correct to map both Tc to abc, xyz, is it always just 2 Tc
+      // is it correct to map both Tc to abc, xyz, is it always just 2 Tc - NO
 
       val species = null
 
@@ -68,6 +70,7 @@ nbElement (nelements)
   }
 
   def convertIvanoStruct(ivanoStructure: StructureIvano) = {
+    println("convertIvanoStruct")
     val    gamma = 0.0
     val    a = 0.0
     val    b = 0.0
@@ -79,20 +82,9 @@ nbElement (nelements)
 
     val lattice = Lattice(gamma, a, b, c, matrix, volume, alpha, beta)
 
-//    val abc: Seq[(Double)] = ivanoStructure.sites(0).position
-//    val xyz: Seq[(Double)] = ivanoStructure.sites(1).position
-//
-//    val species = null
-//
-//    val sites: Seq[(Site)] = Site(abc,xyz,species)::Nil
-    //----
-//    val sitesa: Seq[Sites] = ivanoStructure.sites.foreach {convertIvanoSite}
-
-//    val sites: Seq[(Site)] = convertIvanoSite(ivanoStructure.sites(0))::convertIvanoSite(ivanoStructure.sites(1))
-
-
 
     Struct(convertIvanoSite(ivanoStructure), lattice)
+//    Struct(lattice)
   }
 }
 
@@ -105,6 +97,7 @@ case class SpaceGroup(pointGroup: String,
     symbol: String,
     number: Int)
 
+//case class Struct(lattice: Lattice)
 case class Struct(sites: Seq[Site], lattice: Lattice)
 
 case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species])

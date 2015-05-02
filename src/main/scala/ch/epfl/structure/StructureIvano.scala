@@ -7,5 +7,9 @@ case class StructureIvano(
     pbc: Seq[Boolean])
 
 
-case class SiteIvano(position: Seq[Double], kindName: String)
+//case class SiteIvano(position: Seq[Double], kindName: String)
+case class SiteIvano(position: Seq[Double], kindName: String, properties: PropertiesIvano)
+
+case class PropertiesIvano(weights: Seq[Double], mass: Double)
+//case class PropertiesIvano(weights: Seq[Double])
 

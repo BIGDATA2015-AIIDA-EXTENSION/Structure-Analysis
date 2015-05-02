@@ -14,23 +14,27 @@ object Main {
 //    structs1 foreach println
 
 // ------
-    val fileName2 = getClass getResource "/structures_ivano.json"
-    val source2 = Source fromURL fileName2
-
-    val structs2 = source2 getLines() flatMap { x: String =>
-          println(x)
-          StructureParserIvano.parse(x)
-        }
-    structs2 foreach println
+//
+//    val fileName2 = getClass getResource "/structures_ivano.json"
+//    val source2 = Source fromURL fileName2
+//
+//    val structs2 = source2 getLines() flatMap { x: String =>
+//          println(x)
+//          StructureParserIvano.parse(x)
+//        }
+//    structs2 foreach println
 
     //----
 //
-//    val test = source2.getLines().next()
-//    val test1 = StructureParserIvano.parse(test)
-//
+
+    val fileName2 = getClass getResource "/structures_ivano_new.json"
+    val source2 = Source fromURL fileName2
+    val test = source2.getLines().next()
+    val test1 = StructureParserIvano.parseDebug(test)
+
 //    val s = test1.get
-//
-//    println (StructureIvano)
+//    println (test)
+    println (test1)
 
 
     //Structure.convertIvano(test1);
