@@ -26,28 +26,20 @@ object StructureParserIvano {
     println(result)
   }
 
+  private implicit val propertiesIvanoReads = Json.reads[PropertiesIvano]
 
   private implicit val siteIvanoReads: Reads[SiteIvano] = (
-
-    (JsPath \ "position"                ).read[Seq[Double]] and
-      (JsPath \ "kind_name"                ).read[String] and
-      (JsPath \ "properties"                ).read[PropertiesIvano]
-    )(SiteIvano.apply _)
-
-  private implicit val propertiesIvanoReads: Reads[PropertiesIvano] = (
-    (JsPath \ "weights" ).read[Seq[Double]] and
-      (JsPath \ "mass"                ).read[Double]
-    )(PropertiesIvano.apply _)
-  //(JsPath \ "mass"                ).read[Double]
-
+    (JsPath \ "position"  ).read[Seq[Double]] and
+    (JsPath \ "kind_name" ).read[String] and
+    (JsPath \ "properties").read[PropertiesIvano]
+  )(SiteIvano.apply _)
 
   private implicit val structureIvanoReads: Reads[StructureIvano] = (
-    (JsPath \ "uuid"                ).read[String] and
-      (JsPath \ "cell"                ).read[Seq[Seq[Double]]] and
-      (JsPath \ "cell_volume"         ).read[Double] and
-      (JsPath \ "sites"                ).read[Seq[SiteIvano]] and
-      (JsPath \ "pbc"                ).read[Seq[Boolean]]
+    (JsPath \ "uuid"       ).read[String] and
+    (JsPath \ "cell"       ).read[Seq[Seq[Double]]] and
+    (JsPath \ "cell_volume").read[Double] and
+    (JsPath \ "sites"      ).read[Seq[SiteIvano]] and
+    (JsPath \ "pbc"        ).read[Seq[Boolean]]
   )(StructureIvano.apply _)
 
 }
-//(JsPath \ "uuid"                ).read[String] and
