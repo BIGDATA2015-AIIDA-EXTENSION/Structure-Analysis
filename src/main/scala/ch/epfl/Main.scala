@@ -30,19 +30,18 @@ object Main {
 //    val source2 = Source fromURL fileName2
 //
 //    val structs2 = source2 getLines() flatMap { x: String =>
-//          //println(x)
 //          StructureParserIvano.parse(x)
 //        }
-////    structs2 foreach println
 //
 //    for ( s <- structs2) {
 //      println(s)
-//      Structure.convertIvano(s);
+//      println(Structure.convertIvano(s));
 //    }
 
     //---- Get a single record from a file
 //
 /*
+
     val fileName3 = getClass getResource "/structures_ivano_new_no_NaN.json"
     val source3 = Source fromURL fileName3
     val testjson3 = source3.getLines().next()

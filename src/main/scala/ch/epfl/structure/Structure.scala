@@ -76,9 +76,9 @@ nbElement (nelements)
   def convertIvanoStruct(ivanoStructure: StructureIvano) = {
     println("convertIvanoStruct")
     val    gamma = 0.0
-    val    a = 0.0
-    val    b = 0.0
-    val    c = 0.0
+    val    a = ivanoStructure.cellLengths(0)
+    val    b = ivanoStructure.cellLengths(1)
+    val    c = ivanoStructure.cellLengths(2)
     val    matrix = ivanoStructure.cell
     val    volume = ivanoStructure.cellVolume
     val    alpha = 0.0

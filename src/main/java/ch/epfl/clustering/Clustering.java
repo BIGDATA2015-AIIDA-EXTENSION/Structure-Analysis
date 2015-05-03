@@ -44,10 +44,11 @@ public class Clustering {
         for(Cluster c : clusters) {
             if(c.elems.size() > 3) {
                 count++;
-                sum += c.metrics();
+                double d = c.metrics();
+                sum += d;
             }
         }
-        return sum/count;
+        return count != 0 ? sum/count : 0.0;
     }
 
     public static class Cluster {
@@ -93,7 +94,8 @@ public class Clustering {
                 Collections.shuffle(elems);
                 Plane plane = new Plane(elems.get(0), elems.get(1), elems.get(2));
                 for(int j=3; j < elems.size(); j++) {
-                    sum += plane.distance(elems.get(j))/(elems.size()-3);
+                    double d = plane.distance(elems.get(j));
+                    sum += d/(elems.size()-3);
                 }
             }
             return sum/nbMeasures;
@@ -111,7 +113,7 @@ public class Clustering {
             }
 
             public double distance(Vector p) {
-                return Math.abs(Vector.dotProduct(normal, p)+d) / normal.norm();
+                return normal.norm() != 0 ? Math.abs(Vector.dotProduct(normal, p)+d) / normal.norm() : 0.0;
             }
 
         }

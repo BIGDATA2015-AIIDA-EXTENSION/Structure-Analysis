@@ -2,6 +2,8 @@ package ch.epfl.structure
 case class StructureIvano(
     uuid: String,
     cell: Seq[Seq[Double]],
+    cellAngles: Seq[Double],
+    cellLengths: Seq[Double],
     cellVolume: Double,
     sites: Seq[SiteIvano],
     pbc: Seq[Boolean])

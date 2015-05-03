@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
  */
 object ClusterStruct {
 
-  val k = 1
+  val k = 3
 
   def compute(args: Array[String]) = {
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
@@ -21,50 +21,49 @@ object ClusterStruct {
     val parsed = jsonStructures flatMap StructureParserIvano.parse
 
     val parsedStruct = parsed.map(Structure.convertIvano).cache()
-    parsedStruct.groupBy(_.struct.sites.size).map{ case (n, iter) => (n, iter.size) }.sortBy(_._1, ascending = false).saveAsTextFile("hdfs://" + args(1))
 
-    //val plotCluster = dataForPlottingClusters(parsedStruct)
-    //val plotMetrics = dataForPlottingMetrics(parsed)
-    //val plotPlaneMetrics = dataForMetrics(10, parsed)
+    val plotCluster = dataForPlottingClusters(parsedStruct, true, true)
 
 
-    //plotCluster.saveAsTextFile("hdfs://" + args(1)+"plot-cluster")
-    //plotMetrics.saveAsTextFile("hdfs://" + args(1)+"plot-clusterNumberMetrics")
-    //plotPlaneMetrics.saveAsTextFile("hdfs://" + args(1)+"plot-plane-metrics")
+    plotCluster.saveAsTextFile("hdfs://" + args(1))
 
     sc.stop()
   }
 
-  def dataForPlottingClusters(rdd: RDD[Structure]): RDD[String] = {
+  def dataForPlottingClusters(rdd: RDD[Structure], withClusterNumberMetrics:Boolean = false, genAllPlots: Boolean = false): RDD[String] = {
     rdd.map{s =>
-      val nbClusters = bestClusterNb(s)
-      new HierarchicalClustering(toPointList(s, k)).compute(nbClusters).clusters().asScala.map(_.toString).mkString(":")
-    }
-  }
-
-  def bestClusterNb(s: Structure): Int = {
-
-      val nbAtoms = k*k*k*s.struct.sites.size
-
-      val nbClusterWithMetric = (nbAtoms/2 to nbAtoms) map {i =>
-        val cluster = new HierarchicalClustering(toPointList(s, k))
-        (i, cluster.compute(i).clusterNumberMetrics())
+      val clusterings = clusterForAllValues(s)
+      val clusterNumber = clusterMetrics(clusterings)
+      val planeMetrics = planeMetric(clusterings).map(_._2).mkString(" ")
+      val clustersAsString = clusterings.map{ case (_, cl) => cl.clusters().asScala.map(_.toString).mkString(":") }.mkString(";")
+      if(withClusterNumberMetrics) {
+        s"$clustersAsString|${clusterNumber.map(_._2).mkString(" ")}:$planeMetrics"
+      } else {
+        clustersAsString
       }
-    nbClusterWithMetric.maxBy(_._2)._1
-  }
-
-  def dataForPlottingMetrics(rdd: RDD[Structure]): RDD[(String, String)] = {
-    rdd.map{s =>
-      (s.id, (1 to toPointList(s, k).size() map {i =>
-        val cluster = new HierarchicalClustering(toPointList(s, k))
-        cluster.compute(i).clusterNumberMetrics()
-      }).mkString(":"))
     }
   }
 
-  def dataForMetrics(nbClusters: Int, rdd: RDD[Structure]): RDD[(String, String)] = {
-    rdd.map(s => (s.id, new HierarchicalClustering(toPointList(s, k)).compute(k*k*k).metrics().toString))
+  def clusterForAllValues(s: Structure): Seq[(Int, Clustering)] = {
+    val nbAtoms = k*k*k*s.struct.sites.size
+
+    (1 to Math.sqrt(nbAtoms/2.0).toInt) map {i =>
+      val cluster = new HierarchicalClustering(toPointList(s, k))
+      (i, cluster.compute(i))
+    }
   }
+
+  def planeMetric(clusterings: Seq[(Int, Clustering)]): Seq[(Int, Double)] = {
+    clusterings.map{ case (nbCluster, clustering) => (nbCluster, clustering.metrics()) }
+  }
+
+
+  def clusterMetrics(clusterings: Seq[(Int, Clustering)]): Seq[(Int, Double)] = {
+    clusterings.map{ case (nbCluster, clustering) => (nbCluster, clustering.clusterNumberMetrics()) }
+  }
+
+  def bestClusterNb(values: Seq[(Int, Double)]): Int = values.maxBy(_._2)._1
+
 
   def toPointList(s: Structure, k: Int): java.util.List[Vector] = {
     s.struct.sites.flatMap{ site =>

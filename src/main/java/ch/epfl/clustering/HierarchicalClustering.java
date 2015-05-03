@@ -53,6 +53,7 @@ public class HierarchicalClustering {
     }
 
     public Clustering compute(int nbClusters) {
+        System.out.println("Compute "+nbClusters+" "+nbElems);
         List<Cluster_> cl = clusterize(nbClusters);
         List<Clustering.Cluster> retVal = new ArrayList<Clustering.Cluster>();
         for(Cluster_ c : cl) {
