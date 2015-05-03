@@ -36,6 +36,8 @@ object StructureParserIvano {
   private implicit val structureIvanoReads: Reads[StructureIvano] = (
     (JsPath \ "uuid"       ).read[String] and
     (JsPath \ "cell"       ).read[Seq[Seq[Double]]] and
+    (JsPath \ "cell_angles").read[Seq[Double]] and
+    (JsPath \ "cell_lengths").read[Seq[Double]] and
     (JsPath \ "cell_volume").read[Double] and
     (JsPath \ "sites"      ).read[Seq[SiteIvano]] and
     (JsPath \ "pbc"        ).read[Seq[Boolean]]
