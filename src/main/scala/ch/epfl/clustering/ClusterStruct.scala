@@ -1,8 +1,9 @@
 package ch.epfl.clustering
 
-import ch.epfl.structure.{Structure, StructureParser}
+import ch.epfl.structure.{Structure, StructureParserIvano}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+
 import scala.collection.JavaConverters._
 
 /**
@@ -10,23 +11,24 @@ import scala.collection.JavaConverters._
  */
 object ClusterStruct {
 
-  val k = 2
+  val k = 1
 
   def compute(args: Array[String]) = {
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
 
-    val parsed = jsonStructures flatMap StructureParser.parse
+    val parsed = jsonStructures flatMap StructureParserIvano.parse
 
-    parsed.cache()
+    val parsedStruct = parsed.map(Structure.convertIvano).cache()
+    parsedStruct.groupBy(_.struct.sites.size).map{ case (n, iter) => (n, iter.size) }.sortBy(_._1, ascending = false).saveAsTextFile("hdfs://" + args(1))
 
-    val plotCluster = dataForPlottingClusters(parsed)
+    //val plotCluster = dataForPlottingClusters(parsedStruct)
     //val plotMetrics = dataForPlottingMetrics(parsed)
     //val plotPlaneMetrics = dataForMetrics(10, parsed)
 
 
-    plotCluster.saveAsTextFile("hdfs://" + args(1)+"plot-cluster")
+    //plotCluster.saveAsTextFile("hdfs://" + args(1)+"plot-cluster")
     //plotMetrics.saveAsTextFile("hdfs://" + args(1)+"plot-clusterNumberMetrics")
     //plotPlaneMetrics.saveAsTextFile("hdfs://" + args(1)+"plot-plane-metrics")
 

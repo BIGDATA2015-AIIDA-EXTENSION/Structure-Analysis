@@ -18,7 +18,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-mllib" % "1.2.1" % "provided",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
-  "org.scalanlp" %% "breeze-viz" % "0.11.2"
+  "org.scalanlp" %% "breeze-viz" % "0.11.2",
+  "com.github.nikita-volkov" % "sext" % "0.2.3"
 )
 
 resolvers ++= Seq(

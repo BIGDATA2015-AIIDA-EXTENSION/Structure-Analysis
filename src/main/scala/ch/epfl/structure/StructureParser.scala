@@ -30,8 +30,8 @@ object StructureParser {
 
   private implicit val potentialReads: Reads[Potential] = (
     (JsPath \ "name").read[String] and
-      (JsPath \ "params").read[Params] and
-      (JsPath \ "params_id" \ "$oid").read[String]
+      (JsPath \ "params").read[Params]/* and
+      (JsPath \ "params_id" \ "$oid").read[String]*/
     )(Potential.apply _)
 
   private implicit val siteReads = Json.reads[Site]
