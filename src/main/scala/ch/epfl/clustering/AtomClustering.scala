@@ -3,6 +3,8 @@ package ch.epfl.clustering
 import ch.epfl.structure.{StructureParserIvano, Structure}
 import org.apache.spark.{SparkContext, SparkConf}
 
+import scala.io.Source
+
 object AtomClustering {
 
   class Atom(val id: Int, val position: Vector[Double]) {
@@ -24,7 +26,7 @@ object AtomClustering {
           i <- 0 until k
           j <- 0 until k
           l <- 0 until k
-        } yield new Atom(index, sum(List(origin, mult(axisX, i), mult(axisY, j), mult(axisZ, j))))
+        } yield new Atom(index, sum(List(origin, mult(axisX, i), mult(axisY, j), mult(axisZ, l))))
     }.toList
   }
 
@@ -80,6 +82,7 @@ object AtomClustering {
 
     val parsed = jsonStructures flatMap StructureParserIvano.parse
     val parsedStruct = parsed.map(Structure.convertIvano).cache()
+
     val plotCluster = parsedStruct.map(s => multiCLuster(s, 3))
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()

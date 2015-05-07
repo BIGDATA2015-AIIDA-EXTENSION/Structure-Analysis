@@ -47,7 +47,7 @@ object Clustering {
 
         cl1.fusionCluster(cl2)
 
-        cl2.elems.foreach(e => elemInCluster.update(e, cl1.id))
+        cl2.elems.foreach(e => elemInCluster.put(e, cl1.id))
         clusters.remove(cl2.id)
 
         index +=1

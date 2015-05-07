@@ -34,7 +34,6 @@ specimen
 nbElement (nelements)
    */
   def convertIvano(ivanoStructure: StructureIvano) = {
-    println("convertIvano")
     val id = ivanoStructure.uuid
     val elements = null
     val energy = 0.0
@@ -60,7 +59,6 @@ nbElement (nelements)
 
   //def convertIvanoSite(site: SiteIvano) = {
   def convertIvanoSite(ivanoStructure: StructureIvano) = {
-      println("convertIvanoSite")
       //val abc: Seq[(Double)] = ivanoStructure.sites(0).position
 
       val l = MutableList[Site]()
@@ -74,7 +72,6 @@ nbElement (nelements)
   }
 
   def convertIvanoStruct(ivanoStructure: StructureIvano) = {
-    println("convertIvanoStruct")
     val    gamma = 0.0
     val    a = ivanoStructure.cellLengths(0)
     val    b = ivanoStructure.cellLengths(1)
