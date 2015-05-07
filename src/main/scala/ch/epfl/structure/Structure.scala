@@ -17,7 +17,8 @@ case class Structure(
     anonymousFormula: String,
     energyPerSite: Double)
 
-case class SpaceGroup(pointGroup: String,
+case class SpaceGroup(
+    pointGroup: String,
     source: String,
     crystalSystem: String,
     hall: String,
@@ -30,7 +31,8 @@ case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species])
 
 case class Species(occu: Double, element: String)
 
-case class Lattice(gamma: Double,
+case class Lattice(
+    gamma: Double,
     a: Double,
     b: Double,
     c: Double,

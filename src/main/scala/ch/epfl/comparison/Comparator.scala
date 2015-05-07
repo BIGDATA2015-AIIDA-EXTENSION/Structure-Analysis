@@ -5,11 +5,11 @@ import ch.epfl.structure._
 
 object Comparator {
 
-  type ComparisonData = Map[(Species, Species), Seq[Double]]
+  type ComparisonData = Map[(String, String), Seq[Double]]
 
   val MAX_CELL_MULTIPLES = 256
   val MAX_VALUES         = 10000
-  val CUTOFF_FACTOR      = 1.001
+  val CUTOFF_FACTOR      = 1.5
   val TOLERANCE          = 3e-4
 
   /**
@@ -34,7 +34,7 @@ object Comparator {
     val aCrossCLen = Math.sqrt(aCrossC dot aCrossC)
     val aCrossCHat = aCrossC / aCrossCLen
 
-    val cutoff = CUTOFF_FACTOR * max(norm(a), norm(b), norm(c))
+    val cutoff = CUTOFF_FACTOR * max(lattice.a, lattice.b, lattice.c)
 
     private def helper(crossHat: DenseVector[Double], crossLen: Double)(dR: DenseVector[Double]) = {
       val radius = cutoff + Math.abs(dR dot crossHat)
@@ -108,19 +108,26 @@ object Comparator {
 
     // Generating the list of distances (up to some maximum) between atoms,
     // one for each pair of species
-    val dists = combinations.toSeq flatMap { case (i, j) => getCompData(i, j, unitCell) }
+    val dists = combinations.toSeq flatMap { case (i, j) => getDistsBetween(i, j, unitCell) }
 
-    // Group distances by pair of species and sort them
-    dists groupBy (_._1) map { case (k, v) => (k, v.flatMap(_._2).sorted) }
+    // Group the computed distances by pair of species
+    val distsBySpecies = dists groupBy {
+      case ((spec1, spec2), _) =>
+        if (spec1 <= spec2) (spec1, spec2)
+        else (spec2, spec1)
+    }
+
+    // Sort the distances
+    distsBySpecies map { case (k, v) => (k, v.flatMap(_._2).sorted) }
   }
 
   /**
    * Compute the distances between two atoms
    */
-  private def getCompData(s1: Site, s2: Site, unitCell: UnitCell): Seq[((Species, Species), Seq[Double])] = {
+  private def getDistsBetween(s1: Site, s2: Site, unitCell: UnitCell): Seq[((String, String), Seq[Double])] = {
     val cutoff = unitCell.cutoff
-    val a = DenseVector(s1.abc.toArray)
-    val b = DenseVector(s2.abc.toArray)
+    val a = DenseVector(s1.xyz.toArray)
+    val b = DenseVector(s2.xyz.toArray)
 
     val dR = b - a
 
@@ -144,14 +151,13 @@ object Comparator {
         Math.sqrt(testDistSq)
     }
 
-    val results = (resultStream take MAX_VALUES).toSeq
+    val results = resultStream take MAX_VALUES
 
-    // One for each pair of species (A~A, A~B, B~B)
+    // One for each pair of species (A~A, A~B, B~A, B~B)
     for {
       spec1 <- s1.species
       spec2 <- s2.species
-      if spec1.element <= spec2.element
-    } yield (spec1, spec2) -> results
+    } yield (spec1.element, spec2.element) -> results
   }
 
 }

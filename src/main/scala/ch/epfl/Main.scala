@@ -1,7 +1,7 @@
 package ch.epfl
 
 import ch.epfl.comparison.Comparator
-import ch.epfl.structure.StructureParser
+import ch.epfl.structure.{Structure, StructureParser}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
@@ -72,17 +72,23 @@ object Main {
 
     val structs = source getLines() flatMap StructureParser.parse
 
-    val distances = structs.toList combinations 2 map {
-      case List(s1, s2) =>
-        val dist = Comparator.distance(s1, s2).get
-        val refDist = reflResults getOrElse ((s1.id, s2.id), reflResults((s2.id, s1.id)))
-        ((s1.id, s2.id), (dist, Math.abs(refDist - dist)))
+    val s0 = structs find (_.id == "54f582b401162b54f25762ae")
+    Comparator.getCompData(s0.get) foreach {
+      case ((spec1, spec2), dists) =>
+        println(s"($spec1, $spec2) -> $dists")
     }
 
-    distances foreach {
-      case (ids, (dist, err)) =>
-        println(s"$ids -> distance=$dist, \terror=$err")
-    }
+//    val distances = structs.toList combinations 2 map {
+//      case List(s1, s2) =>
+//        val dist = Comparator.distance(s1, s2).get
+//        val refDist = reflResults getOrElse ((s1.id, s2.id), reflResults((s2.id, s1.id)))
+//        ((s1.id, s2.id), (dist, Math.abs(refDist - dist)))
+//    }
+//
+//    distances foreach {
+//      case (ids, (dist, err)) =>
+//        println(s"$ids -> distance=$dist, \terror=$err")
+//    }
 
   }
 }
