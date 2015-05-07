@@ -1,6 +1,7 @@
 package ch.epfl.clustering
 
-import ch.epfl.structure.Structure
+import ch.epfl.structure.{StructureParserIvano, Structure}
+import org.apache.spark.{SparkContext, SparkConf}
 
 object AtomClustering {
 
@@ -9,7 +10,7 @@ object AtomClustering {
   }
 
   def atomsFromStructure(s: Structure, k: Int): List[Atom] = {
-    s.struct.sites.zipWithIndex.flatMap{
+    s.struct.sites.zipWithIndex.flatMap {
       case (site, index) =>
         val Seq(x, y, z) = site.xyz
 
@@ -61,9 +62,27 @@ object AtomClustering {
     }.max
   }
 
-  def multiCLuster(s: Structure, inflation: Int): Unit = {
+  def multiCLuster(s: Structure, inflation: Int): List[(Int, Int, ClusteredStructure[Atom])] = {
     val bigStructure = atomsFromStructure(s, inflation)
-    val maxClusters = bigStructure.length
+    val maxClusters: Int = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
+    (1 until maxClusters).map {
+      nb =>
+        val clusteredStructure = Clustering.cluster[Atom](bigStructure, distance, nb)
+        val metric = computeMetric(clusteredStructure)
+        (nb, metric, clusteredStructure)
+    }.toList
+  }
+
+  def compute(args: Array[String]) = {
+    val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
+
+    val jsonStructures = sc.textFile("hdfs://" + args(0))
+
+    val parsed = jsonStructures flatMap StructureParserIvano.parse
+    val parsedStruct = parsed.map(Structure.convertIvano).cache()
+    val plotCluster = parsedStruct.map(s => multiCLuster(s, 3))
+    plotCluster.saveAsTextFile("hdfs://" + args(1))
+    sc.stop()
   }
 
 }

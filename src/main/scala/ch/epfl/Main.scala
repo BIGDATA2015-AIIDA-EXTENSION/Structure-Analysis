@@ -3,7 +3,7 @@ package ch.epfl
 import ch.epfl.structure.{StructureIvano, Structure, StructureParserIvano, StructureParser}
 
 
-import ch.epfl.clustering.{helpers, Clustering}
+import ch.epfl.clustering.{AtomClustering, helpers, Clustering}
 import ch.epfl.computations.AiidaComputations._
 import ch.epfl.computations.GraphMaker._
 
@@ -19,6 +19,7 @@ object Main {
     args(2) match {
       case "c" => compute(args)
       case "p" => generatePlots(args)
+      case "cl" => AtomClustering.compute(args)
       case _ => println("Missing argument.")
     }
 
