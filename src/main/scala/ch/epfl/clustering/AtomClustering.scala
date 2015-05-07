@@ -50,10 +50,6 @@ object AtomClustering {
     }
   }
 
-  def genClusterStructure(s: Structure, inflation: Int, clusterNb: Int): ClusteredStructure[Atom] = {
-    Clustering.cluster[Atom](atomsFromStructure(s, inflation), distance, clusterNb)
-  }
-
   def computeMetric(clusteredStructure: ClusteredStructure[Atom]): Int = {
     clusteredStructure.clusters.map {
       cluster =>
@@ -63,6 +59,11 @@ object AtomClustering {
             helpers.computeRank(listPositions)
         }.max
     }.max
+  }
+
+  def multiCLuster(s: Structure, inflation: Int): Unit = {
+    val bigStructure = atomsFromStructure(s, inflation)
+    val maxClusters = bigStructure.length
   }
 
 }

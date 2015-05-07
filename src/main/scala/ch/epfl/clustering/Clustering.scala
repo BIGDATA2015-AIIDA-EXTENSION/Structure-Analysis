@@ -13,10 +13,10 @@ object Clustering {
     val nbDist = nbElems*(nbElems-1)/2
     var distances = new Array[DistHolder](nbDist)
 
-    case class Clust(id: Int, elems: List[T]) {
+    case class Clust(id: Int, var elems: List[T]) {
 
       def fusionCluster(cl: Clust): Unit = {
-        this.elems ++= cl.elems
+        this.elems = this.elems ++ cl.elems
       }
 
     }
