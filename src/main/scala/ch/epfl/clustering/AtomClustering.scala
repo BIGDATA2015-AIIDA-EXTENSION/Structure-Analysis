@@ -1,0 +1,68 @@
+package ch.epfl.clustering
+
+import ch.epfl.structure.Structure
+
+object AtomClustering {
+
+  case class Atom(id: Int, position: Vector[Double]) {
+    require(position.length == 3)
+  }
+
+  def atomsFromStructure(s: Structure, k: Int): List[Atom] = {
+    s.struct.sites.zipWithIndex.flatMap{
+      case (site, index) =>
+        val Seq(x, y, z) = site.xyz
+
+        val origin = Vector[Double](x, y, z)
+
+        val axisX = Vector[Double](s.struct.lattice.a, 0.0, 0.0)
+        val axisY = Vector[Double](0.0, s.struct.lattice.b, 0.0)
+        val axisZ = Vector[Double](0.0, 0.0, s.struct.lattice.c)
+
+        for {
+          i <- 0 until k
+          j <- 0 until k
+          l <- 0 until k
+        } yield Atom(index, sum(List(origin, mult(axisX, i), mult(axisY, j), mult(axisZ, j))))
+    }.toList
+  }
+
+  def distance(elm1: Atom, elm2: Atom): Double = {
+    val sqrSum = elm1.position.zip(elm2.position).foldLeft(0.0) {
+      case (acc, (p1, p2)) => acc + Math.pow(p1 - p2, 2)
+    }
+    Math.sqrt(sqrSum)
+  }
+
+  def add(a: Vector[Double], b: Vector[Double]): Vector[Double] = {
+    a.zip(b).map(cpl => cpl._1 + cpl._2)
+  }
+
+  def mult(a: Vector[Double], factor: Double): Vector[Double] = {
+    a.map(e => factor * e)
+  }
+
+  def sum(list: List[Vector[Double]]): Vector[Double] = {
+    require(list.forall(vect => vect.length == 3))
+    list.foldLeft(Vector[Double](0.0, 0.0, 0.0)) {
+      case (acc, vec) =>
+        add(acc, vec)
+    }
+  }
+
+  def genClusterStructure(s: Structure, inflation: Int, clusterNb: Int): ClusteredStructure[Atom] = {
+    Clustering.cluster[Atom](atomsFromStructure(s, inflation), distance, clusterNb)
+  }
+
+  def computeMetric(clusteredStructure: ClusteredStructure[Atom]): Int = {
+    clusteredStructure.clusters.map {
+      cluster =>
+        cluster.elems.groupBy(atom => atom.id).map {
+          case (id, elems) =>
+            val listPositions = elems.map(elm => elm.position)
+            helpers.computeRank(listPositions)
+        }.max
+    }.max
+  }
+
+}

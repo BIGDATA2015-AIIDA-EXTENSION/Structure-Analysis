@@ -5,7 +5,7 @@ import breeze.linalg.rank
 
 object helpers {
 
-  def computeRank(list: List[List[Double]]) = {
+  def computeRank(list: List[Vector[Double]]) = {
     if (list.exists(l => l.length != 3)) {
       throw new IllegalArgumentException("Vectors should have three components.")
     }
@@ -13,5 +13,5 @@ object helpers {
     rank(matrix)
   }
 
-  def matrixFromList(list: List[List[Double]]): DenseMatrix[Double] = DenseMatrix(list.map(_.toArray):_*)
+  def matrixFromList(list: List[Vector[Double]]): DenseMatrix[Double] = DenseMatrix(list.map(_.toArray):_*)
 }
