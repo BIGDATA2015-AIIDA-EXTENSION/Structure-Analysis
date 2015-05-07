@@ -5,7 +5,7 @@ import org.apache.spark.{SparkContext, SparkConf}
 
 object AtomClustering {
 
-  case class Atom(id: Int, position: Vector[Double]) {
+  class Atom(val id: Int, val position: Vector[Double]) {
     require(position.length == 3)
   }
 
@@ -24,7 +24,7 @@ object AtomClustering {
           i <- 0 until k
           j <- 0 until k
           l <- 0 until k
-        } yield Atom(index, sum(List(origin, mult(axisX, i), mult(axisY, j), mult(axisZ, j))))
+        } yield new Atom(index, sum(List(origin, mult(axisX, i), mult(axisY, j), mult(axisZ, j))))
     }.toList
   }
 
@@ -64,8 +64,8 @@ object AtomClustering {
 
   def multiCLuster(s: Structure, inflation: Int): List[(Int, Int, ClusteredStructure[Atom])] = {
     val bigStructure = atomsFromStructure(s, inflation)
-    val maxClusters: Int = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
-    (1 until maxClusters).map {
+    val maxClusters = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
+    (1 until (maxClusters + 1)).map {
       nb =>
         val clusteredStructure = Clustering.cluster[Atom](bigStructure, distance, nb)
         val metric = computeMetric(clusteredStructure)
