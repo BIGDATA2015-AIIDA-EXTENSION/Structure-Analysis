@@ -3,7 +3,7 @@ package ch.epfl
 import ch.epfl.structure.{StructureIvano, Structure, StructureParserIvano, StructureParser}
 
 
-import ch.epfl.clustering.{ClusterStruct, Clustering}
+import ch.epfl.clustering.{helpers, ClusterStruct, Clustering}
 import ch.epfl.computations.AiidaComputations._
 import ch.epfl.computations.GraphMaker._
 
@@ -20,6 +20,9 @@ object Main {
       case "c" => compute(args)
       case "p" => generatePlots(args)
       case "cl" => ClusterStruct.compute(args)
+      case "tr" =>
+        val list: List[List[Double]] = List(List(1, 1, 0), List(0, 0, 1), List(0, 1, 1), List(1, 1, 0, 3))
+        println(helpers.computeRank(list))
       case _ => println("Missing argument.")
     }
 
