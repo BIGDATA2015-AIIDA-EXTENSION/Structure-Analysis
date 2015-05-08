@@ -62,6 +62,34 @@ object AtomClustering {
     }.max
   }
 
+  def computeMetric2(clusteredStructure: ClusteredStructure[Atom]): Double = {
+    clusteredStructure.clusters.map {
+      cluster =>
+        val atoms = cluster.elems.groupBy(atom => atom.id)
+        val mean = atoms.map {
+          case (id, elems) =>
+            val listPositions = elems.map(elm => elm.position)
+            if(clusteredStructure.clusters.size == 6) println(listPositions)
+
+            val rank = helpers.computeRank(listPositions)
+            if(clusteredStructure.clusters.size == 6) println("rank:"+rank)
+            rank
+        }.sum / atoms.size
+        if(clusteredStructure.clusters.size == 6) println("mean:" + mean)
+        mean * cluster.elems.size
+    }.sum.toDouble / clusteredStructure.clusters.foldLeft(0.0){case (sum, cluster) => sum + cluster.elems.size}
+  }
+
+  def computeClusters(struct: Structure): String = {
+    val atoms = atomsFromStructure(struct, 3)
+    val maxClusterNumber = Math.ceil(Math.sqrt(atoms.length) / 2).toInt
+    val clusterings = Clustering.cluster(atoms, distance _, 1 to maxClusterNumber)
+    val metric1 = clusterings.zipWithIndex.map(c => ((c._2 + 1).toDouble, computeMetric(c._1).toDouble))
+    val metric2 = clusterings.zipWithIndex.map(c => ((c._2 + 1).toDouble, computeMetric2(c._1)))
+
+    PlottingFormatter.toPlot(clusterings, List(/*ClusterMetric("Max", metric1), */ClusterMetric("Mean", metric2)) , (a:Atom) => a.position)
+  }
+
   def multiCLuster(s: Structure, inflation: Int): List[(Int, Int, ClusteredStructure[Atom])] = {
     val bigStructure = atomsFromStructure(s, inflation)
     val maxClusters = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
@@ -81,7 +109,7 @@ object AtomClustering {
     val parsed = jsonStructures flatMap StructureParserIvano.parse
     val parsedStruct = parsed.map(Structure.convertIvano).cache()
 
-    val plotCluster = parsedStruct.map(s => multiCLuster(s, 3))
+    val plotCluster = parsedStruct map computeClusters
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
   }
