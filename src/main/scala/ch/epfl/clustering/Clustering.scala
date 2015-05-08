@@ -5,9 +5,15 @@ import scala.collection.mutable.{HashMap => MHashMap}
  * Created by lukas on 07/05/15.
  */
 object Clustering {
-  def cluster[T](elems: List[T], distance: (T, T) => Double, nbCluster: Int): ClusteredStructure[T] = {
 
-    if(nbCluster < 1 || nbCluster > elems.size)
+  def cluster[T](elems: List[T], distance: (T, T) => Double, nbCluster: Int): ClusteredStructure[T] = {
+    cluster[T](elems, distance, nbCluster to nbCluster).head
+  }
+
+
+  def cluster[T](elems: List[T], distance: (T, T) => Double, nbCluster: Range): List[ClusteredStructure[T]] = {
+
+    if(nbCluster.start < 1 || nbCluster.end > elems.size)
       sys.error(s"$nbCluster is not a valid cluster number for ${elems.size} elements.")
 
     type S = (T, Int)
@@ -17,6 +23,7 @@ object Clustering {
     val nbElems = elems.size
     val nbDist = nbElems*(nbElems-1)/2
     var distances = new Array[DistHolder](nbDist)
+    var clusterings = List[ClusteredStructure[T]]()
 
     case class Clust(id: Int, var elems: List[S]) {
 
@@ -41,8 +48,12 @@ object Clustering {
       }
     }
 
+    def dataToClusteredStruct(): ClusteredStructure[T] = {
+      ClusteredStructure(clusters.values.toList.map(cl => Cluster(cl.elems.map(_._1))))
+    }
+
     def clusterize(): List[Clust] = {
-      var nbIter = nbElems - nbCluster
+      var nbIter = nbElems - nbCluster.start
       var index = 0
 
       while(nbIter > 0) {
@@ -57,6 +68,10 @@ object Clustering {
 
         index +=1
         nbIter -=1
+
+        if(nbCluster.contains(clusters.size)) {
+          clusterings = dataToClusteredStruct() :: clusterings
+        }
       }
       clusters.values.toList
     }
@@ -74,8 +89,8 @@ object Clustering {
     }
 
     distances = distances.sortBy(_.distance)
-
-    ClusteredStructure(clusterize().map(cl => Cluster(cl.elems.map(_._1))))
+    clusterize()
+    clusterings
   }
 }
 

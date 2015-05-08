@@ -1,9 +1,7 @@
 package ch.epfl.clustering
 
-import ch.epfl.structure.{StructureParserIvano, Structure}
-import org.apache.spark.{SparkContext, SparkConf}
-
-import scala.io.Source
+import ch.epfl.structure.{Structure, StructureParserIvano}
+import org.apache.spark.{SparkConf, SparkContext}
 
 object AtomClustering {
 
@@ -69,7 +67,7 @@ object AtomClustering {
     val maxClusters = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
     (1 until (maxClusters + 1)).map {
       nb =>
-        val clusteredStructure = Clustering.cluster[Atom](bigStructure, distance, nb)
+        val clusteredStructure = Clustering.cluster[Atom](bigStructure, distance _, nb)
         val metric = computeMetric(clusteredStructure)
         (nb, metric, clusteredStructure)
     }.toList
