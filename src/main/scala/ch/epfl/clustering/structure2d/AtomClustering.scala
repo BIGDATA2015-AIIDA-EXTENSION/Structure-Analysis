@@ -1,5 +1,6 @@
-package ch.epfl.clustering
+package ch.epfl.clustering.structure2d
 
+import ch.epfl.clustering.{ClusterMetric, Clustering, PlottingFormatter, ClusteredStructure}
 import ch.epfl.structure.{Structure, StructureParserIvano}
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -39,6 +40,10 @@ object AtomClustering {
     a.zip(b).map(cpl => cpl._1 + cpl._2)
   }
 
+  def subst(a: Vector[Double], b: Vector[Double]): Vector[Double] = {
+    a.zip(b).map(cpl => cpl._1 - cpl._2)
+  }
+
   def mult(a: Vector[Double], factor: Double): Vector[Double] = {
     a.map(e => factor * e)
   }
@@ -56,8 +61,8 @@ object AtomClustering {
       cluster =>
         cluster.elems.groupBy(atom => atom.id).map {
           case (id, elems) =>
-            val listPositions = elems.map(elm => elm.position)
-            helpers.computeRank(listPositions)
+            val listPositions = elems.flatMap(elm => elems.map(e => subst(elm.position, e.position)))
+            Helpers.computeRank(listPositions)
         }.max
     }.max
   }
@@ -68,37 +73,64 @@ object AtomClustering {
         val atoms = cluster.elems.groupBy(atom => atom.id)
         val mean = atoms.map {
           case (id, elems) =>
-            val listPositions = elems.map(elm => elm.position)
-            if(clusteredStructure.clusters.size == 6) println(listPositions)
+            val listDist = elems.flatMap(elm => elems.map(e => subst(elm.position, e.position)))
 
-            val rank = helpers.computeRank(listPositions)
-            if(clusteredStructure.clusters.size == 6) println("rank:"+rank)
-            rank
+            Helpers.computeRank(listDist)
         }.sum / atoms.size
-        if(clusteredStructure.clusters.size == 6) println("mean:" + mean)
         mean * cluster.elems.size
     }.sum.toDouble / clusteredStructure.clusters.foldLeft(0.0){case (sum, cluster) => sum + cluster.elems.size}
   }
 
-  def computeClusters(struct: Structure): String = {
-    val atoms = atomsFromStructure(struct, 3)
-    val maxClusterNumber = Math.ceil(Math.sqrt(atoms.length) / 2).toInt
-    val clusterings = Clustering.cluster(atoms, distance _, 1 to maxClusterNumber)
-    val metric1 = clusterings.zipWithIndex.map(c => ((c._2 + 1).toDouble, computeMetric(c._1).toDouble))
-    val metric2 = clusterings.zipWithIndex.map(c => ((c._2 + 1).toDouble, computeMetric2(c._1)))
-
-    PlottingFormatter.toPlot(clusterings, List(/*ClusterMetric("Max", metric1), */ClusterMetric("Mean", metric2)) , (a:Atom) => a.position)
+  def clusterSizeMetric(clusteredStructure: ClusteredStructure[Atom]): Double = {
+    clusteredStructure.clusters.map(_.elems.size).min
   }
+
+  def computeClusters(struct: Structure, inflation: Int = 3): String = {
+    val atoms = atomsFromStructure(struct, 3)
+    val maxClusterNumber = Math.ceil(Math.sqrt(atoms.length/2)).toInt
+    val clusterings = Clustering.cluster(struct.id, atoms, distance _, 1 to maxClusterNumber)
+    val metric1 = clusterings.map(computeMetric(_).toDouble)
+    val metric2 = clusterings.map(computeMetric2)
+    val metric3 = clusterings.map(clusterSizeMetric)
+
+    val is2d = metric1.zip(metric3).map{ case (rank, minCluster) => rank <= 2 && minCluster >= inflation }.count(identity) >= 2
+
+
+    val metric1WithIndex = metric1.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
+    val metric2WithIndex = metric2.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
+    val metric3WithIndex = metric3.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
+
+    PlottingFormatter.toPlot(
+      clusterings,
+      Some(is2d.toString()),
+      List(
+        ClusterMetric("Max", metric1WithIndex),
+        ClusterMetric("Mean", metric2WithIndex),
+        ClusterMetric("MinCluster", metric3WithIndex)
+      ),
+      (a:Atom) => a.position)
+  }
+
+
 
   def multiCLuster(s: Structure, inflation: Int): List[(Int, Int, ClusteredStructure[Atom])] = {
     val bigStructure = atomsFromStructure(s, inflation)
     val maxClusters = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
     (1 until (maxClusters + 1)).map {
       nb =>
-        val clusteredStructure = Clustering.cluster[Atom](bigStructure, distance _, nb)
+        val clusteredStructure = Clustering.cluster[Atom](s.id, bigStructure, distance _, nb)
         val metric = computeMetric(clusteredStructure)
         (nb, metric, clusteredStructure)
     }.toList
+  }
+
+  def is2D(struct: Structure, inflation: Int): Boolean = {
+    val atoms = atomsFromStructure(struct, inflation)
+    val maxClusterNumber = Math.ceil(Math.sqrt(atoms.length/2)).toInt
+    val clusterings = Clustering.cluster(struct.id, atoms, distance _, 1 to maxClusterNumber)
+    val metric1 = clusterings.map(computeMetric)
+    val metric2 = clusterings.map(clusterSizeMetric)
+    metric1.zip(metric2).map{ case (rank, minCluster) => rank <= 2 && minCluster >= inflation }.count(identity) >= 2
   }
 
   def compute(args: Array[String]) = {
@@ -109,7 +141,21 @@ object AtomClustering {
     val parsed = jsonStructures flatMap StructureParserIvano.parse
     val parsedStruct = parsed.map(Structure.convertIvano).cache()
 
-    val plotCluster = parsedStruct map computeClusters
+    val plotCluster = parsedStruct map(computeClusters(_, 3))
+    plotCluster.saveAsTextFile("hdfs://" + args(1))
+    sc.stop()
+  }
+
+
+  def compute2d(args: Array[String]) = {
+    val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
+
+    val jsonStructures = sc.textFile("hdfs://" + args(0))
+
+    val parsed = jsonStructures flatMap StructureParserIvano.parse
+    val parsedStruct = parsed.map(Structure.convertIvano).cache()
+
+    val plotCluster = parsedStruct.map(s => (s.id, is2D(s, 3)))
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
   }

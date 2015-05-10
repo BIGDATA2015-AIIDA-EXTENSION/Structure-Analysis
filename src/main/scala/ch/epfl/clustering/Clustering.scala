@@ -6,12 +6,12 @@ import scala.collection.mutable.{HashMap => MHashMap}
  */
 object Clustering {
 
-  def cluster[T](elems: List[T], distance: (T, T) => Double, nbCluster: Int): ClusteredStructure[T] = {
-    cluster[T](elems, distance, nbCluster to nbCluster).head
+  def cluster[T](id: String, elems: List[T], distance: (T, T) => Double, nbCluster: Int): ClusteredStructure[T] = {
+    cluster[T](id, elems, distance, nbCluster to nbCluster).head
   }
 
 
-  def cluster[T](elems: List[T], distance: (T, T) => Double, nbCluster: Range): List[ClusteredStructure[T]] = {
+  def cluster[T](id: String, elems: List[T], distance: (T, T) => Double, nbCluster: Range): List[ClusteredStructure[T]] = {
 
     if(nbCluster.start < 1 || nbCluster.end > elems.size)
       sys.error(s"$nbCluster is not a valid cluster number for ${elems.size} elements.")
@@ -49,7 +49,7 @@ object Clustering {
     }
 
     def dataToClusteredStruct(): ClusteredStructure[T] = {
-      ClusteredStructure(clusters.values.toList.map(cl => Cluster(cl.elems.map(_._1))))
+      ClusteredStructure(id, clusters.values.toList.map(cl => Cluster(cl.elems.map(_._1))))
     }
 
     def clusterize(): List[Clust] = {
@@ -95,6 +95,6 @@ object Clustering {
 }
 
 
-case class ClusteredStructure[T](clusters: List[Cluster[T]])
+case class ClusteredStructure[T](id: String, clusters: List[Cluster[T]])
 
 case class Cluster[T](elems: List[T])

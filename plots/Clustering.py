@@ -6,9 +6,9 @@ color = ["red", "green", "blue", "yellow", "orange", "black", "white", "purple",
 
 class Clustering:
 
-    def __init__(self, json):
-    	print("clustering with "+str(len(json))+" clusters")
-    	self.clusters = [] 
+    def __init__(self, id, json):
+    	self.clusters = []
+        self.id = id
         for jsonCluster in json:
             self.clusters.append(Cluster(jsonCluster))
 
@@ -16,7 +16,7 @@ class Clustering:
         cluster_number = 0
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        fig.canvas.set_window_title(str(len(self.clusters))+" clusters")
+        fig.canvas.set_window_title(self.id+" with "+str(len(self.clusters))+" clusters")
         minValue = sys.maxint
         maxValue = -sys.maxint
 
@@ -47,7 +47,6 @@ class Cluster:
     def __init__(self, json):
     	self.points = []
 
-    	print("	Cluster with "+str(len(json))+" points")
         for point in json:
             self.points.append(point)
 

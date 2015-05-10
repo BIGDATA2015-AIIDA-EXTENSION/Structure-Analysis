@@ -9,10 +9,12 @@ import json
 
 
 def clusteringList(json):
-	clustering = []
-	for jsonClustering in json["clusterings"]:
-		clustering.append(Clustering(jsonClustering))
-	return clustering
+    clustering = []
+    print(json["id"])
+    print(json["info"])
+    for jsonClustering in json["clusterings"]:
+        clustering.append(Clustering(json["id"], jsonClustering))
+    return clustering
 
 
 struct_to_plot = int(sys.argv[1])
@@ -23,7 +25,7 @@ with open('cluster.txt') as fp:
             json = json.loads(line)
 
             for clustering in clusteringList(json):
-            	clustering.plot(plt)
+                clustering.plot(plt)
 
             Metrics(json).plot(plt)
 

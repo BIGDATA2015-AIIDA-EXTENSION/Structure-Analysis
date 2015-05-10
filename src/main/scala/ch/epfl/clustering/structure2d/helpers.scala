@@ -1,9 +1,8 @@
-package ch.epfl.clustering
+package ch.epfl.clustering.structure2d
 
-import breeze.linalg.DenseMatrix
-import breeze.linalg.rank
+import breeze.linalg.{DenseMatrix, rank}
 
-object helpers {
+object Helpers {
 
   def computeRank(list: List[Vector[Double]]) = {
     if (list.exists(l => l.length != 3)) {

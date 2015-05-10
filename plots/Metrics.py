@@ -8,6 +8,7 @@ class Metrics:
     def plot(self, plt):
         fig = plt.figure()
         ax = fig.add_subplot(111)
+        ax.set_ylim(0, 10)
         
         for metric in self.metrics:
             metric.plot(ax)
