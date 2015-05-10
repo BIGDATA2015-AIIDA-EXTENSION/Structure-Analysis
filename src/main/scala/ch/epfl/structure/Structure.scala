@@ -1,7 +1,5 @@
 package ch.epfl.structure
 
-import scala.collection.mutable.MutableList
-
 case class Structure(
     id: String,
     elements: Seq[String],
@@ -21,7 +19,6 @@ case class Structure(
 
 object Structure {
   def convertIvano(ivanoStructure: StructureIvano) = {
-    println("convertIvano")
     val id = ivanoStructure.uuid
     val elements = null
     val energy = 0.0
@@ -46,28 +43,22 @@ object Structure {
   }
 
   def convertIvanoSite(ivanoStructure: StructureIvano) = {
-      println("convertIvanoSite")
 
-      val l = MutableList[Site]()
-
-      for ( site <- ivanoStructure.sites) {
-        val xyz: Seq[(Double)] = site.position
-        val species = List(Species(0, site.kindName))
-        l += Site(List(0.0,0.0,0.0), xyz ,species)
+      ivanoStructure.sites map {
+        case SiteIvano(position, kindName, _) =>
+          Site(List(0, 0, 0), position, List(Species(0, kindName)))
       }
-      l
   }
 
   def convertIvanoStruct(ivanoStructure: StructureIvano) = {
-    println("convertIvanoStruct")
-    val    gamma = 0.0
-    val    a = ivanoStructure.cellLengths(0)
-    val    b = ivanoStructure.cellLengths(1)
-    val    c = ivanoStructure.cellLengths(2)
-    val    matrix = ivanoStructure.cell
-    val    volume = ivanoStructure.cellVolume
-    val    alpha = 0.0
-    val    beta = 0.0
+    val gamma = 0.0
+    val a = ivanoStructure.cellLengths(0)
+    val b = ivanoStructure.cellLengths(1)
+    val c = ivanoStructure.cellLengths(2)
+    val matrix = ivanoStructure.cell
+    val volume = ivanoStructure.cellVolume
+    val alpha = 0.0
+    val beta = 0.0
 
     val lattice = Lattice(gamma, a, b, c, matrix, volume, alpha, beta)
 
@@ -85,12 +76,9 @@ case class SpaceGroup(pointGroup: String,
     symbol: String,
     number: Int)
 
-//case class Struct(lattice: Lattice)
 case class Struct(sites: Seq[Site], lattice: Lattice)
 
 case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species])
-
-
 
 case class Species(occu: Double, element: String)
 
@@ -103,8 +91,6 @@ case class Lattice(
                     volume: Double,
                     alpha: Double,
                     beta: Double)
-
-
 
 case class Potential(name: String, params: Params)
 
