@@ -19,21 +19,21 @@ case class Structure(
 
 object Structure {
   def convertIvano(ivanoStructure: StructureIvano) = {
-    val id = ivanoStructure.uuid
-    val elements = null
-    val energy = 0.0
-    val pressure = 0.0
-    val spaceGroup = null
-    val unitCellFormula = null
-    val struct = convertIvanoStruct(ivanoStructure)
-    val reducedCellFormula = null
-    val nbElements = 0
-    val nbSites = 0
-    val chemsys = null
-    val potential = null
-    val prettyFormula = null
-    val anonymousFormula = null
-    val energyPerSite = 0
+    val struct             = convertIvanoStruct(ivanoStructure)
+    val id                 = ivanoStructure.uuid
+    val elements           = (struct.sites flatMap (_.species map (_.element)))
+    val energy             = 0
+    val pressure           = 0
+    val spaceGroup         = SpaceGroup.empty
+    val unitCellFormula    = Map.empty[String, Int]
+    val reducedCellFormula = Map.empty[String, Int]
+    val nbElements         = elements.distinct.size
+    val nbSites            = struct.sites.size
+    val chemsys            = ""
+    val potential          = Potential.empty
+    val prettyFormula      = ""
+    val anonymousFormula   = ""
+    val energyPerSite      = 0
 
     Structure(id, elements, energy, pressure, spaceGroup,
     unitCellFormula, struct, reducedCellFormula, nbElements,
@@ -67,20 +67,30 @@ object Structure {
   }
 }
 
-
-
 case class SpaceGroup(pointGroup: String,
     source: String,
     crystalSystem: String,
     hall: String,
     symbol: String,
     number: Int)
+object SpaceGroup {
+  val empty: SpaceGroup = SpaceGroup("", "", "", "", "", 0)
+}
 
 case class Struct(sites: Seq[Site], lattice: Lattice)
+object Struct {
+  val empty: Struct = Struct(Nil, Lattice.empty)
+}
 
 case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species])
+object Site {
+  val empty: Site = Site(Nil, Nil, Nil)
+}
 
 case class Species(occu: Double, element: String)
+object Species {
+  val empty: Species = Species(0, "")
+}
 
 case class Lattice(
                     gamma: Double,
@@ -91,9 +101,21 @@ case class Lattice(
                     volume: Double,
                     alpha: Double,
                     beta: Double)
+object Lattice {
+  val empty: Lattice = Lattice(0, 0, 0, 0, Nil, 0, 0, 0)
+}
 
 case class Potential(name: String, params: Params)
+object Potential {
+  val empty: Potential = Potential("", Params.empty)
+}
 
 case class Params(aa: Param, bb: Param, ab: Param)
+object Params {
+  val empty: Params = Params(Param.empty, Param.empty, Param.empty)
+}
 
 case class Param(cut: Double, epsilon: Double, m: Int, n: Int, sigma: Double)
+object Param {
+  val empty: Param = Param(0, 0, 0, 0, 0)
+}
