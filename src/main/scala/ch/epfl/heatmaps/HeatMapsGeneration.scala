@@ -1,4 +1,4 @@
-package ch.epfl.computations
+package ch.epfl.heatmaps
 
 import ch.epfl.structure._
 import org.apache.spark.SparkContext._

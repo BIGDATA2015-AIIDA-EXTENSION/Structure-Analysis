@@ -1,7 +1,7 @@
 package ch.epfl
 
 import ch.epfl.clustering.structure2d.AtomClustering
-import ch.epfl.computations.{GraphMaker, AiidaComputations}
+import ch.epfl.heatmaps.{GraphMaker, AiidaComputations}
 
 
 object Main {

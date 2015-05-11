@@ -1,4 +1,4 @@
-package ch.epfl.computations
+package ch.epfl.heatmaps
 
 import breeze.linalg.DenseMatrix
 import breeze.plot._
