@@ -18,24 +18,29 @@ object StructureParserIvano {
     result <- json.validate[StructureIvano].asOpt
   } yield result
 
+
+
   def parseDebug(line: String): Unit = {
     val json = Json.parse(line)
     val result = json.validate[StructureIvano]
-    println(result)
   }
 
-  private implicit val siteIvanoReads: Reads[SiteIvano] = (
+  private implicit val propertiesIvanoReads = Json.reads[PropertiesIvano]
 
-    (JsPath \ "position"                ).read[Seq[Double]] and
-      (JsPath \ "kind_name"                ).read[String]
-    )(SiteIvano.apply _)
+  private implicit val siteIvanoReads: Reads[SiteIvano] = (
+    (JsPath \ "position"  ).read[Seq[Double]] and
+    (JsPath \ "kind_name" ).read[String] and
+    (JsPath \ "properties").read[PropertiesIvano]
+  )(SiteIvano.apply _)
 
   private implicit val structureIvanoReads: Reads[StructureIvano] = (
-    (JsPath \ "uuid"                ).read[String] and
-      (JsPath \ "cell"                ).read[Seq[Seq[Double]]] and
-      (JsPath \ "sites"                ).read[Seq[SiteIvano]] and
-      (JsPath \ "pbc"                ).read[Seq[Boolean]]
+    (JsPath \ "uuid"       ).read[String] and
+    (JsPath \ "cell"       ).read[Seq[Seq[Double]]] and
+    (JsPath \ "cell_angles").read[Seq[Double]] and
+    (JsPath \ "cell_lengths").read[Seq[Double]] and
+    (JsPath \ "cell_volume").read[Double] and
+    (JsPath \ "sites"      ).read[Seq[SiteIvano]] and
+    (JsPath \ "pbc"        ).read[Seq[Boolean]]
   )(StructureIvano.apply _)
 
 }
-//(JsPath \ "uuid"                ).read[String] and

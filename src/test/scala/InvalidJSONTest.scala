@@ -1,5 +1,5 @@
-import org.scalatest.FunSuite
 import ch.epfl.structure.StructureParser
+import org.scalatest.FunSuite
 
 class InvalidJSONTest extends FunSuite {
   test("The parser should return none on invalid input") {
