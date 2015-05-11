@@ -19,7 +19,7 @@ object Main {
         .flatMap(StructureParser.parse)
         .filter(_.nbElements == 1)
         .map(renameSpecies)
-        .map(s => (s, Comparator.getCompData(s)))
+        .map(s => (s, Comparator getCompData s))
     }
 
     val naturalStructures = {
@@ -29,7 +29,7 @@ object Main {
         .map(Structure.convertIvano)
         .filter(_.nbElements == 1)
         .map(renameSpecies)
-        .map(s => (s, Comparator.getCompData(s)))
+        .map(s => (s, Comparator getCompData s))
     } collect ()
 
     val similar = syntheticStructures map { case (synthetic, syntheticData) =>
@@ -41,7 +41,7 @@ object Main {
       (synthetic.id, matchingSimilar)
     }
 
-    similar.saveAsTextFile("/projects/aiida/similar_structures")
+    similar saveAsTextFile (structuresDir + "similar_structures")
 
   }
 
