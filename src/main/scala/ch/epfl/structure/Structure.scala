@@ -43,7 +43,6 @@ object Structure {
   }
 
   def convertIvanoSite(ivanoStructure: StructureIvano) = {
-
       ivanoStructure.sites map {
         case SiteIvano(position, kindName, _) =>
           Site(List(0, 0, 0), position, List(Species(0, kindName)))

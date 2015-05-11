@@ -15,7 +15,13 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "1.2.1" % "provided",
   "org.apache.spark" %% "spark-mllib" % "1.2.1" % "provided",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
+  "org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
+  "org.scalanlp" %% "breeze-viz" % "0.11.2"
+)
+
+resolvers ++= Seq(
+  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+  "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
 scalacOptions ++= Seq(
