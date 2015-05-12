@@ -17,6 +17,7 @@ object Comparison {
         .flatMap(StructureParser.parse)
         .filter(_.nbElements == 1)
         .map(renameSpecies)
+        .map(_.scaled)
         .map(s => (s, Comparator getCompData s))
     }
 
@@ -27,6 +28,7 @@ object Comparison {
         .map(Structure.convertIvano)
         .filter(_.nbElements == 1)
         .map(renameSpecies)
+        .map(_.scaled)
         .map(s => (s, Comparator getCompData s))
     } collect ()
 
