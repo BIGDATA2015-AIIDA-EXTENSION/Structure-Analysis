@@ -1,6 +1,6 @@
 package ch.epfl.comparison
 
-import ch.epfl.structure.{ Structure, StructureParser, StructureParserIvano }
+import ch.epfl.structure.{ Structure, StructureParser, NaturalStructureParser }
 import org.apache.spark.{ SparkConf, SparkContext }
 import org.apache.spark.rdd.PairRDDFunctions
 
@@ -24,8 +24,7 @@ object Comparison {
     val naturalStructures = {
       val fileName = structuresDir + "natural_structures.json"
       sc.textFile(fileName)
-        .flatMap(StructureParserIvano.parse)
-        .map(Structure.convertIvano)
+        .flatMap(NaturalStructureParser.parse)
         .filter(_.nbElements == 1)
         .flatMap(renameSpecies)
         .map(_.scaled)
@@ -36,7 +35,7 @@ object Comparison {
       val matchingSimilar = naturalStructures collect {
         case (natural, naturalData) if (Comparator areComparable (syntheticData, naturalData))
                                     && (Comparator areSimilar (syntheticData, naturalData)) =>
-          (natural.id, (Comparator distance (syntheticData, naturalData)))
+          (natural.id, Comparator distance (syntheticData, naturalData))
       }
       (synthetic.id, matchingSimilar)
     }

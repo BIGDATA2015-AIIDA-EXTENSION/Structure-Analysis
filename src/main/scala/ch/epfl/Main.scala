@@ -15,8 +15,6 @@ object Main {
       case "comparison" => Comparison.compareStructures(args)
       case _ => println("Missing argument.")
     }
-
-
   }
 
 }
