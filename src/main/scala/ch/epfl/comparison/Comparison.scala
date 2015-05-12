@@ -16,7 +16,7 @@ object Comparison {
       sc.textFile(fileName)
         .flatMap(StructureParser.parse)
         .filter(_.nbElements == 1)
-        .map(renameSpecies)
+        .flatMap(renameSpecies)
         .map(_.scaled)
         .map(s => (s, Comparator getCompData s))
     }
@@ -27,7 +27,7 @@ object Comparison {
         .flatMap(StructureParserIvano.parse)
         .map(Structure.convertIvano)
         .filter(_.nbElements == 1)
-        .map(renameSpecies)
+        .flatMap(renameSpecies)
         .map(_.scaled)
         .map(s => (s, Comparator getCompData s))
     } collect ()
@@ -45,15 +45,21 @@ object Comparison {
 
   }
 
-  private def renameSpecies(structure: Structure): Structure = {
-    require(structure.nbElements == 1)
-    val newSites = structure.struct.sites map { site =>
-      val newSpecies = site.species map { specie =>
-        specie.copy(element = "X")
-      }
-      site.copy(species = newSpecies)
-    }
+  private def renameSpecies(structure: Structure): List[Structure] = {
 
-    structure.copy(struct = structure.struct.copy(sites = newSites))
+    def placeholderName(x: Int) = s"EL$x"
+
+    structure.elements.distinct.permutations.toList map { elements =>
+      val substitutions = elements.zipWithIndex.map { case (e, i) => (e, placeholderName(i)) }.toMap
+
+      val newSites = structure.struct.sites map { site =>
+        val newSpecies = site.species map { specie =>
+          specie.copy(element = substitutions(specie.element))
+        }
+        site.copy(species = newSpecies)
+      }
+
+      structure.copy(struct = structure.struct.copy(sites = newSites))
+    }
   }
 }
