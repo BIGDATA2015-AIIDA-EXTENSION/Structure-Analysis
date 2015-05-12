@@ -7,7 +7,7 @@ import scala.io.Source
 /**
  * Created by renucci on 07/05/15.
  */
-class ParserTest extends FunSuite {
+class StructureParserTest extends FunSuite {
 
   test("The parser should return None on invalid input") {
     assert((StructureParser parse "invalid") == None, "The parser should return None on invalid input")
