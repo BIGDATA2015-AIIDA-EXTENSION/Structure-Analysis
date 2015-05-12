@@ -15,7 +15,11 @@ case class Structure(
     potential: Potential,
     prettyFormula: String,
     anonymousFormula: String,
-    energyPerSite: Double)
+    energyPerSite: Double) {
+
+  def scaled: Structure = copy(struct = struct.scaled)
+
+}
 
 object Structure {
   def convertIvano(ivanoStructure: StructureIvano) = {
@@ -76,12 +80,22 @@ object SpaceGroup {
   val empty: SpaceGroup = SpaceGroup("", "", "", "", "", 0)
 }
 
-case class Struct(sites: Seq[Site], lattice: Lattice)
+case class Struct(sites: Seq[Site], lattice: Lattice) {
+  def scaled: Struct = {
+    val nbSites = sites.length
+    val factor = nbSites / Math.cbrt(lattice.volume)
+    copy(
+      sites = sites map (_ * factor),
+      lattice = lattice * factor)
+  }
+}
 object Struct {
   val empty: Struct = Struct(Nil, Lattice.empty)
 }
 
-case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species])
+case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species]) {
+  def *(factor: Double) = copy(xyz = xyz map (_ * factor))
+}
 object Site {
   val empty: Site = Site(Nil, Nil, Nil)
 }
@@ -99,7 +113,16 @@ case class Lattice(
                     matrix: Seq[Seq[Double]],
                     volume: Double,
                     alpha: Double,
-                    beta: Double)
+                    beta: Double) {
+  def *(factor: Double): Lattice = {
+    copy(
+      a = a * factor,
+      b = b * factor,
+      c = c * factor,
+      matrix = matrix map (_ map (_ * factor)),
+      volume = a * b * c * factor * factor * factor)
+  }
+}
 object Lattice {
   val empty: Lattice = Lattice(0, 0, 0, 0, Nil, 0, 0, 0)
 }
