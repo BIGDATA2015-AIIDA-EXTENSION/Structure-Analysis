@@ -1,5 +1,7 @@
 package ch.epfl.structure
 
+import breeze.linalg.{ DenseVector, DenseMatrix }
+
 case class Structure(id: String,
                      elements: Seq[String],
                      energy: Double,
@@ -25,20 +27,29 @@ case class SpaceGroup(pointGroup: String,
                       hall: String,
                       symbol: String,
                       number: Int)
+object SpaceGroup {
+  val empty: SpaceGroup = SpaceGroup("", "", "", "", "", 0)
+}
 
 
 case class Struct(sites: Seq[Site], lattice: Lattice) {
   def scaled: Struct = {
     val nbSites = sites.length
     val factor = nbSites / Math.cbrt(lattice.volume)
+    val newLattice = lattice * factor
+    val latticeMatrix = DenseMatrix.tabulate(3, 3) { case (i, j) =>
+      newLattice.matrix(i)(j)
+    }
     copy(
-      sites = sites map (_ * factor),
-      lattice = lattice * factor)
+      sites = sites map (_ * (latticeMatrix, factor)),
+      lattice = newLattice)
   }
 }
 
 case class Site(abc: Seq[Double], xyz: Seq[Double], species: Seq[Species]) {
-  def *(factor: Double) = copy(xyz = xyz map (_ * factor))
+  def *(matrix: DenseMatrix[Double], factor: Double) = {
+    copy(xyz = (matrix * DenseVector(abc.toArray)).toArray.toList)
+  }
 }
 
 case class Species(occu: Double, element: String)
@@ -62,7 +73,16 @@ case class Lattice(gamma: Double,
 }
 
 case class Potential(name: String, params: Params)
+object Potential {
+  val empty: Potential = Potential("", Params.empty)
+}
 
 case class Params(aa: Param, bb: Param, ab: Param)
+object Params {
+  val empty: Params = Params(Param.empty, Param.empty, Param.empty)
+}
 
 case class Param(cut: Double, epsilon: Double, m: Int, n: Int, sigma: Double)
+object Param {
+  val empty: Param = Param(0, 0, 0, 0, 0)
+}

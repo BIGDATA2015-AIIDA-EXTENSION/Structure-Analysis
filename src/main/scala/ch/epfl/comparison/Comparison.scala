@@ -6,41 +6,54 @@ import org.apache.spark.rdd.PairRDDFunctions
 
 object Comparison {
 
+  def run(args: Array[String]): Unit = {
+    if (args.length < 4) {
+      println("Usage: spark-submit [spark options] <this jar>.jar <synthetic file> <natural file> comparison <output file>")
+    } else {
+      compareStructures(args)
+    }
+  }
+
   def compareStructures(args: Array[String]): Unit = {
+
+    val inputSynthetic = args(0)
+    val inputNatural   = args(1)
+    val outputFile     = args(3)
+
     val conf = new SparkConf() setAppName "Structure Analysis"
     val sc = new SparkContext(conf)
     val structuresDir = "/projects/aiida/"
 
     val syntheticStructures = {
-      val fileName = structuresDir + "structures.json"
+      val fileName = structuresDir + inputSynthetic
       sc.textFile(fileName)
         .flatMap(StructureParser.parse)
-        .filter(_.nbElements == 1)
         .flatMap(renameSpecies)
         .map(_.scaled)
         .map(s => (s, Comparator getCompData s))
     }
 
     val naturalStructures = {
-      val fileName = structuresDir + "natural_structures.json"
+      val fileName = structuresDir + inputNatural
       sc.textFile(fileName)
         .flatMap(NaturalStructureParser.parse)
-        .filter(_.nbElements == 1)
         .flatMap(renameSpecies)
         .map(_.scaled)
         .map(s => (s, Comparator getCompData s))
     } collect ()
 
     val similar = syntheticStructures map { case (synthetic, syntheticData) =>
+      val nbElements = synthetic.nbElements
       val matchingSimilar = naturalStructures collect {
-        case (natural, naturalData) if (Comparator areComparable (syntheticData, naturalData))
+        case (natural, naturalData) if natural.nbElements == nbElements
+                                    && (Comparator areComparable (syntheticData, naturalData))
                                     && (Comparator areSimilar (syntheticData, naturalData)) =>
           (natural.id, Comparator distance (syntheticData, naturalData))
       }
       (synthetic.id, matchingSimilar)
     }
 
-    similar saveAsTextFile (structuresDir + "similar_structures")
+    similar saveAsTextFile (structuresDir + outputFile)
 
   }
 
