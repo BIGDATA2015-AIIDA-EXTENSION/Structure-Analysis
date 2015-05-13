@@ -11,7 +11,7 @@ object Main {
       case "c" => AiidaComputations.compute(args)
       case "p" => GraphMaker.generatePlots(args)
       case "cl" => AtomClustering.compute(args)
-      case "2d" => AtomClustering.compute2d(args)
+      //case "2d" => AtomClustering.compute2d(args)
       case "comparison" => Comparison.compareStructures(args)
       case _ => println("Missing argument.")
     }

@@ -81,6 +81,11 @@ object AtomClustering {
     }.sum.toDouble / clusteredStructure.clusters.foldLeft(0.0){case (sum, cluster) => sum + cluster.elems.size}
   }
 
+  def regressionMetric(clusteredStructure: ClusteredStructure[Atom]): Double = {
+    val meanErrors = clusteredStructure.clusters.map(cluster => Helpers.regressionError[Atom](_.position)(cluster))
+    meanErrors.max
+  }
+
   def clusterSizeMetric(clusteredStructure: ClusteredStructure[Atom]): Double = {
     clusteredStructure.clusters.map(_.elems.size).min
   }
@@ -92,6 +97,7 @@ object AtomClustering {
     val metric1 = clusterings.map(computeMetric(_).toDouble)
     val metric2 = clusterings.map(computeMetric2)
     val metric3 = clusterings.map(clusterSizeMetric)
+    val metric4 = clusterings.map(regressionMetric)
 
     val is2d = metric1.zip(metric3).map{ case (rank, minCluster) => rank <= 2 && minCluster >= inflation }.count(identity) >= 2
 
@@ -99,6 +105,7 @@ object AtomClustering {
     val metric1WithIndex = metric1.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
     val metric2WithIndex = metric2.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
     val metric3WithIndex = metric3.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
+    val metric4WithIndex = metric4.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
 
     PlottingFormatter.toPlot(
       clusterings,
@@ -106,7 +113,8 @@ object AtomClustering {
       List(
         ClusterMetric("Max", metric1WithIndex),
         ClusterMetric("Mean", metric2WithIndex),
-        ClusterMetric("MinCluster", metric3WithIndex)
+        ClusterMetric("MinCluster", metric3WithIndex),
+        ClusterMetric("Regression", metric4WithIndex)
       ),
       (a:Atom) => a.position)
   }
@@ -146,7 +154,7 @@ object AtomClustering {
     sc.stop()
   }
 
-
+/*
   def compute2d(args: Array[String]) = {
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
@@ -158,6 +166,6 @@ object AtomClustering {
     val plotCluster = parsedStruct.map(s => (s.id, is2D(s, 3)))
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
-  }
+  }*/
 
 }
