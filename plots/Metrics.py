@@ -23,5 +23,5 @@ class Metric:
             self.points.append((point["x"], point["y"]))
 
     def plot(self, ax):
-    	(listx, listy) = zip(* self.points)
+        (listx, listy) = zip(* self.points)
         ax.plot(listx, listy, label=self.name)
