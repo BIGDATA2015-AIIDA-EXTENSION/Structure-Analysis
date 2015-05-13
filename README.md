@@ -1,4 +1,4 @@
-# Structure Parser
+# Structure Parser [![Build Status](https://travis-ci.org/BIGDATA2015-AIIDA-EXTENSION/Structure-Analysis.svg?branch=travis)](https://travis-ci.org/BIGDATA2015-AIIDA-EXTENSION/Structure-Analysis)
 
 A parser for Martin's structures.
 
