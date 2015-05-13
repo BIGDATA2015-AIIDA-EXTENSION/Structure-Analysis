@@ -35,7 +35,7 @@ object SpaceGroup {
 case class Struct(sites: Seq[Site], lattice: Lattice) {
   def scaled: Struct = {
     val nbSites = sites.length
-    val factor = nbSites / Math.cbrt(lattice.volume)
+    val factor = Math.cbrt(nbSites / lattice.volume)
     val newLattice = lattice * factor
     val latticeMatrix = DenseMatrix.tabulate(3, 3) { case (i, j) =>
       newLattice.matrix(i)(j)

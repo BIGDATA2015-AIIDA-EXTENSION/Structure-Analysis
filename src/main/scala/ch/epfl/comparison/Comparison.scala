@@ -50,8 +50,8 @@ object Comparison {
                                     && (Comparator areSimilar (syntheticData, naturalData)) =>
           (natural.id, Comparator distance (syntheticData, naturalData))
       }
-      (synthetic.id, matchingSimilar)
-    }
+      (synthetic.id, matchingSimilar.toList)
+    } filter (_._2.nonEmpty)
 
     similar saveAsTextFile (structuresDir + outputFile)
 
