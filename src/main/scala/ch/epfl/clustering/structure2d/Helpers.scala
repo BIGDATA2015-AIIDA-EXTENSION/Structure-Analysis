@@ -215,7 +215,7 @@ object Helpers {
 
       val reg: DenseVector[Double] = if(det(A) == 0) {
 
-        println("det 0")
+        //println("det 0")
         val trans = A.t
         val ata = trans * A
         val _ata = plusDelta(ata, 2)
@@ -230,7 +230,7 @@ object Helpers {
       } else {
         A \ b
       }
-      println(reg)
+      //println(reg)
       //val reg = A \ b
       val n = DenseVector(Array[Double](reg(0), reg(1), -1))
       val c = reg(2)
