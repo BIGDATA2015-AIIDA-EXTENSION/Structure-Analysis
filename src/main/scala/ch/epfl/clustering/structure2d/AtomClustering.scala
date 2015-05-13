@@ -109,7 +109,7 @@ object AtomClustering {
 
     PlottingFormatter.toPlot(
       clusterings,
-      Some(is2d.toString()),
+      Some(metric4WithIndex.minBy(_._2)._1.toString),
       List(
         ClusterMetric("Max", metric1WithIndex),
         ClusterMetric("Mean", metric2WithIndex),

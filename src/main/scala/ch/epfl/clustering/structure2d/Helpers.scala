@@ -21,7 +21,7 @@ object Helpers {
       m.flatten().toArray.map(Math.abs).max
     }
 
-    def findEigenVectorAssociatedWithLargestEigenValue(m: DenseMatrix[Double]): DenseVector[Double] = {
+    /*def findEigenVectorAssociatedWithLargestEigenValue(m: DenseMatrix[Double]): DenseVector[Double] = {
       val scale = findLargestEntry(m)
       val scaledMatrix: DenseMatrix[Double] = m * scale
       val mc1: DenseMatrix[Double] = scaledMatrix*scaledMatrix
@@ -121,13 +121,77 @@ object Helpers {
       }
       val totError = errors.foldLeft(0.0)(_ + _)
       totError / errors.length
-    } else 0.0
-    /*def sum(vectors: List[Vector[Double]])(extract: Vector[Double] => Double): Double = {
+    } else 0.0*/
+    def sum(vectors: List[Vector[Double]])(extract: Vector[Double] => Double): Double = {
       vectors.foldLeft(0.0) { case (acc, v) => acc + extract(v) }
     }
+
+    /*def jacobiMethod(a: DenseMatrix[Double], b: DenseVector[Double]): DenseVector[Double] = {
+
+      def maxDiagonal(a: DenseMatrix[Double], b: DenseVector[Double]): (DenseMatrix[Double], DenseVector[Double]) = {
+        println("#"*20)
+        println(a)
+        println(b)
+        println("-"*20)
+        val ((x, y, z), _) = (for{
+          x <- 0 to 2
+          y <- 0 to 2
+          z <- 0 to 2
+          if x != y && x != z && y != z
+        } yield ((x, y, z), a(x, 0)+a(y, 1)+a(z, 2))).maxBy(_._2)
+
+        val new_b = DenseVector[Double](Array[Double](b(x), b(y), b(z)))
+        val col1 = Vector(a(x, 0), a(y, 0), a(z, 0))
+        val col2 = Vector(a(x, 1), a(y, 1), a(z, 1))
+        val col3 = Vector(a(x, 2), a(y, 2), a(z, 2))
+        val new_a = matrixFromList(List(col1, col2, col3))
+        println(new_a)
+        println(new_b)
+        println("#"*20)
+
+        (new_a, new_b)
+      }
+
+      def helper(funcs: List[DenseVector[Double] => Double])(iter: Int, input: DenseVector[Double]): DenseVector[Double] = {
+
+        def isEqual(x: Double, y: Double, z: Double, input: DenseVector[Double]): Boolean = {
+          val error = 0.001
+          Math.abs(x - input(0)) < error &&
+          Math.abs(y - input(1)) < error &&
+          Math.abs(z - input(2)) < error
+        }
+        val maxIter = 10
+
+        val l @ List(x, y, z) = funcs.map(_(input))
+        println(l)
+        if(isEqual(x, y, z, input) || iter == maxIter) {
+          println(iter)
+          input
+        }
+        else helper(funcs)(iter+1,DenseVector[Double](Array[Double](x, y, z)))
+      }
+      val sol = DenseVector[Double](Array[Double](0.0, 0.0, 0.0))
+
+      val (a_new, b_new) = maxDiagonal(a, b)
+
+      def f1(d: DenseVector[Double]): Double = {
+        (b_new(0) + a_new(0, 1)*d(1) + a_new(0, 2)*d(2))/a_new(0, 0)
+      }
+
+      def f2(d: DenseVector[Double]): Double = {
+        (b_new(1) + a_new(1, 0)*d(0)+a_new(1,2)*d(2))/a_new(1,1)
+      }
+
+      def f3(d: DenseVector[Double]): Double = {
+        (b_new(2) + a_new(2, 0)*d(0) + a_new(2, 1)*d(1))/a_new(2,2)
+      }
+
+      helper(List(f1, f2, f3))(0, sol)
+    }*/
+
     val vectors = cluster.elems.map(vectorFromT)
     if (vectors.size >= 3) {
-      println(vectors.size)
+      //println(vectors.size)
       val sumXSq = sum(vectors)(v => v(0) * v(0))
       val sumYSq = sum(vectors)(v => v(1) * v(1))
       val sumXY = sum(vectors)(v => v(0) * v(1))
@@ -142,10 +206,31 @@ object Helpers {
       val col3 = Vector[Double](sumX, sumY, vectors.length)
       val b = DenseVector(Array(sumXZ, sumYZ, sumZ))
       val A = matrixFromList(List(col1, col2, col3))
-      val ata = A * A
-      val atb = A * b
-      val invata = inv(ata)
-      val reg: DenseVector[Double] = invata * atb
+
+
+      def plusDelta(a: DenseMatrix[Double], i: Int): DenseMatrix[Double] = {
+        val identity = DenseMatrix.eye[Double](3)
+        (identity :* Math.pow(10, -i)) + a
+      }
+
+      val reg: DenseVector[Double] = if(det(A) == 0) {
+
+        println("det 0")
+        val trans = A.t
+        val ata = trans * A
+        val _ata = plusDelta(ata, 2)
+        if(det(_ata) == 0) {
+          DenseVector[Double](Array(0.0, 0.0, 0.0))
+        } else {
+          val inverse = inv(_ata)
+          val atab = trans * b
+          inverse * atab
+        }
+
+      } else {
+        A \ b
+      }
+      println(reg)
       //val reg = A \ b
       val n = DenseVector(Array[Double](reg(0), reg(1), -1))
       val c = reg(2)
@@ -158,7 +243,7 @@ object Helpers {
       }
       val totError = errors.foldLeft(0.0)(_ + _)
       totError / errors.length
-    } else 0.0*/
+    } else 0.0
   }
 
 }
