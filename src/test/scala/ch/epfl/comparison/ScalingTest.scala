@@ -1,7 +1,6 @@
 package ch.epfl.comparison
 
 import ch.epfl.structure._
-
 import org.scalatest.FunSuite
 
 class ScalingTest extends FunSuite {
@@ -40,7 +39,7 @@ class ScalingTest extends FunSuite {
     val originalStructure =
       Structure(
         id = "dummy",
-        elements = Seq("A"),
+        elements = Set("A"),
         energy = 0,
         pressure = 0,
         spaceGroup = null,
@@ -127,7 +126,7 @@ class ScalingTest extends FunSuite {
     val originalStructure =
       Structure(
         id = "dummy",
-        elements = Seq("A"),
+        elements = Set("A"),
         energy = 0,
         pressure = 0,
         spaceGroup = null,

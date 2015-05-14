@@ -1,6 +1,6 @@
 package ch.epfl.structure
 
-import breeze.linalg.{DenseVector, inv, DenseMatrix}
+import breeze.linalg.{DenseMatrix, DenseVector, inv}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -18,6 +18,18 @@ object NaturalStructureParser {
     json   <- Try(Json parse line).toOption
     result <- json.validate[NStructure].asOpt
   } yield convertStructure(result)
+
+  private case class NStructure(uuid: String,
+                                cell: Seq[Seq[Double]],
+                                cellAngles: Seq[Double],
+                                cellLengths: Seq[Double],
+                                cellVolume: Double,
+                                sites: Seq[NSite],
+                                pbc: Seq[Boolean])
+
+  private case class NSite(position: Seq[Double], kindName: String, properties: NProperties)
+
+  private case class NProperties(weights: Seq[Double], mass: Double)
 
   private implicit val propertiesIvanoReads = Json.reads[NProperties]
 
@@ -37,28 +49,16 @@ object NaturalStructureParser {
     (JsPath \ "pbc"         ).read[Seq[Boolean]]
   )(NStructure.apply _)
 
-  private case class NStructure(uuid: String,
-                                cell: Seq[Seq[Double]],
-                                cellAngles: Seq[Double],
-                                cellLengths: Seq[Double],
-                                cellVolume: Double,
-                                sites: Seq[NSite],
-                                pbc: Seq[Boolean])
-
-  private case class NSite(position: Seq[Double], kindName: String, properties: NProperties)
-
-  private case class NProperties(weights: Seq[Double], mass: Double)
-
   private def convertStructure(nstruct: NStructure): Structure = {
     val struct = convertStruct(nstruct)
     val id                 = nstruct.uuid
-    val elements           = struct.sites flatMap (_.species map (_.element))
+    val elements           = (nstruct.sites map (_.kindName)).toSet
     val energy             = 0    // Not known
     val pressure           = 0    // Not known
     val spaceGroup         = null // Not known
     val unitCellFormula    = null // Not known
     val reducedCellFormula = null // Not known
-    val nbElements         = elements.distinct.size
+    val nbElements         = elements.size
     val nbSites            = struct.sites.size
     val chemsys            = null // Not known
     val potential          = null // Not known

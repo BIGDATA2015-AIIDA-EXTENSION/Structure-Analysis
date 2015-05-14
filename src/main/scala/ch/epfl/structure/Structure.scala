@@ -1,9 +1,9 @@
 package ch.epfl.structure
 
-import breeze.linalg.{ DenseVector, DenseMatrix }
+import breeze.linalg.{DenseMatrix, DenseVector}
 
 case class Structure(id: String,
-                     elements: Seq[String],
+                     elements: Set[String],
                      energy: Double,
                      pressure: Double,
                      spaceGroup: SpaceGroup,

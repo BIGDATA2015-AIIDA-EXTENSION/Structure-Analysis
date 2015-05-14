@@ -51,7 +51,7 @@ object StructureParser {
 
   private implicit val structureReads: Reads[Structure] = (
     (JsPath \ "_id" \ "$oid"        ).read[String] and
-    (JsPath \ "elements"            ).read[Seq[String]] and
+    (JsPath \ "elements"            ).read[Set[String]] and
     (JsPath \ "energy"              ).read[Double] and
     (JsPath \ "pressure"            ).read[Double] and
     (JsPath \ "spacegroup"          ).read[SpaceGroup] and
