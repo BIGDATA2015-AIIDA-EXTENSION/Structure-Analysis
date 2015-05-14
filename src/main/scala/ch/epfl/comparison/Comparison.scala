@@ -1,8 +1,7 @@
 package ch.epfl.comparison
 
-import ch.epfl.structure.{ Structure, StructureParser, StructureParserIvano }
-import org.apache.spark.{ SparkConf, SparkContext }
-import org.apache.spark.rdd.PairRDDFunctions
+import ch.epfl.structure.{Structure, StructureParser, StructureParserIvano}
+import org.apache.spark.{SparkConf, SparkContext}
 
 object Comparison {
 

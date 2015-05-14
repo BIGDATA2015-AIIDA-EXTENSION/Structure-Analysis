@@ -1,6 +1,6 @@
 package ch.epfl.clustering.structure2d
 
-import ch.epfl.clustering.{ClusterMetric, Clustering, PlottingFormatter, ClusteredStructure}
+import ch.epfl.clustering.{ClusterMetric, ClusteredStructure, Clustering, PlottingFormatter}
 import ch.epfl.structure.{Structure, StructureParserIvano}
 import org.apache.spark.{SparkConf, SparkContext}
 
