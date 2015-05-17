@@ -23,8 +23,8 @@ object Main {
     val naturalsFile = "/projects/aiida/natural_structures.json"
     val syntheticsFile = "/projects/aiida/structures.json"
 
-    findSimilar(naturalsFile, syntheticsFile, "/projects/aiida/similars")
+    findSimilar1(naturalsFile, syntheticsFile, "/projects/aiida/similars2")
 
-    //findDuplicate(syntheticsFile, "/projects/aiida/duplicates")
+    findDuplicate1(syntheticsFile, "/projects/aiida/duplicates")
   }
 }
