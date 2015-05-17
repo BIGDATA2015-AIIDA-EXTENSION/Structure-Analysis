@@ -29,23 +29,23 @@ object Comparison {
     val sc = new SparkContext(conf)
 
     val naturals = sc.textFile(naturalsFile)
-      .flatMap(NaturalStructureParser.parse)
-      .filter(_.nbElements <= 2)
-      .map(normalize)
-      .flatMap(renameSpecies)
-      .map(s => (s.prettyFormula, s))
+      .flatMap(NaturalStructureParser.parse)    // Parse natural structures
+      .filter(_.nbElements <= 2)                // Keep the ones with less than 2 elements
+      .map(normalize)                           // Normalize structures
+      .flatMap(renameSpecies)                   // Rename elements
+      .map(s => (s.prettyFormula, s))           // Key for the join
 
     val synthetics = sc.textFile(syntheticsFile)
-      .flatMap(StructureParser.parse)
-      .map(normalize)
-      .flatMap(renameSpecies)
-      .map(s => (s.prettyFormula, s))
+      .flatMap(StructureParser.parse)           // Parse synthetic structures
+      .map(normalize)                           // Normalize structures
+      .flatMap(renameSpecies)                   // Rename elements
+      .map(s => (s.prettyFormula, s))           // Key for the join
 
-    val similars = naturals.join(synthetics)
-      .map(_._2)
-      .filter { case (n, s) => Comparator.areSimilar(n, s) }
-      .groupByKey()
-      .collect { case (n, ss) if ss.nonEmpty => (n.id, ss.map(_.id).toList) }
+    val similars = naturals.join(synthetics)                 // Join between naturals and synthetics on pretty formula
+      .map(_._2)                                             // Get rid of the join key
+      .filter { case (n, s) => Comparator.areSimilar(n, s) } // Keep only the pair of similar ones
+      .groupByKey()                                          // Group all the pair with the same natural structure
+      .collect { case (n, ss) if ss.nonEmpty => (n.id, ss.map(_.id).toList) } // Keep only the ids
 
 
     similars saveAsTextFile outputFile
@@ -66,20 +66,23 @@ object Comparison {
     val sc = new SparkContext(conf)
 
     val structures = sc.textFile(structuresFile)
-      .flatMap(StructureParser.parse)
-      .map(normalize)
-      .flatMap(renameSpecies)
-      .map(s => (s.prettyFormula, s))
+      .flatMap(StructureParser.parse) // Parse synthetic structures
+      .map(normalize)                 // Normalize structures
+      .flatMap(renameSpecies)         // Rename elements
+      .map(s => (s.prettyFormula, s)) // Key for the join
 
-    val duplicates = structures.join(structures)
-      .map(_._2)
-      .filter { case (s1, s2) => Comparator.areSimilar(s1, s2) }
-      .groupByKey()
-      .collect { case (n, ss) if ss.nonEmpty => (n.id, ss.map(_.id).toList) }
+    val duplicates = structures.join(structures)                 // Join between synthetics and themselves on pretty formula
+      .map(_._2)                                                 // Get rid of the join key
+      .filter { case (s1, s2) => Comparator.areSimilar(s1, s2) } // Keep only the pair of similar ones
+      .groupByKey()                                              // Group all the pair with the same synthetic structure
+      .collect { case (n, ss) if ss.nonEmpty => (n.id, ss.map(_.id).toList) } // Keep only the ids
 
     duplicates saveAsTextFile outputFile
   }
 
+  /**
+   * @return a structure with its species renamed according to the alphabet
+   */
   def renameSpecies(structure: Structure): List[Structure] = {
     require(structure.nbElements <= alphabet.length)
     val elems = alphabet take structure.nbElements
@@ -110,6 +113,9 @@ object Comparison {
     }
   }
 
+  /**
+   * @return a structure with its lattice and sites normalized
+   */
   def normalize(structure: Structure): Structure = {
     val Struct(sites, lattice) = structure.struct
     val factor = Math.cbrt(structure.nbSites / lattice.volume)
