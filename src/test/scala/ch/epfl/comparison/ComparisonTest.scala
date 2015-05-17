@@ -3,9 +3,9 @@ package ch.epfl.comparison
 import ch.epfl.structure._
 import org.scalatest.FunSuite
 
-class ScalingTest extends FunSuite {
+class ComparisonTest extends FunSuite {
 
-  test("A 5x5x5 structure should be scaled to a 1x1x1 structure") {
+  test("A 5x5x5 structure should be normalized to a 1x1x1 structure") {
 
     val originalSpecies =
       Seq(
@@ -83,7 +83,7 @@ class ScalingTest extends FunSuite {
     val expectedStructure =
       originalStructure.copy(struct = expectedStruct)
 
-    val scaledStructure = originalStructure.scaled
+    val scaledStructure = Comparison.normalize(originalStructure)
 
     assert(expectedSites == scaledStructure.struct.sites)
     assert(expectedLattice == scaledStructure.struct.lattice)
@@ -92,7 +92,7 @@ class ScalingTest extends FunSuite {
 
   }
 
-  test("A 2x4x8 structure should be scaled to a 0.5x1x2 structure") {
+  test("A 2x4x8 structure should be normalized to a 0.5x1x2 structure") {
 
     val originalSpecies =
       Seq(
@@ -170,7 +170,7 @@ class ScalingTest extends FunSuite {
     val expectedStructure =
       originalStructure.copy(struct = expectedStruct)
 
-    val scaledStructure = originalStructure.scaled
+    val scaledStructure = Comparison.normalize(originalStructure)
 
     assert(expectedSites == scaledStructure.struct.sites)
     assert(expectedLattice == scaledStructure.struct.lattice)
