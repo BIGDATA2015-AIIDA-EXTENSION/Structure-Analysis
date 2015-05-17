@@ -1,6 +1,5 @@
-package clustering
+package ch.epfl.clustering
 
-import ch.epfl.clustering.{Cluster, ClusteredStructure, Clustering}
 import org.scalatest.FunSuite
 
 /**
@@ -14,7 +13,7 @@ class Simple2DClustering extends FunSuite {
     def distance(p1: Point, p2: Point): Double = {
       val dx = p1.x - p2.x
       val dy = p1.y - p2.y
-      Math.sqrt(dx*dx + dy*dy)
+      Math.sqrt(dx * dx + dy * dy)
     }
 
     val clustering = Clustering.cluster("", elems, distance _, 2)
@@ -29,7 +28,7 @@ class Simple2DClustering extends FunSuite {
     def distance(p1: Point, p2: Point): Double = {
       val dx = p1.x - p2.x
       val dy = p1.y - p2.y
-      Math.sqrt(dx*dx + dy*dy)
+      Math.sqrt(dx * dx + dy * dy)
     }
 
     val clustering = Clustering.cluster("", elems, distance _, 1)
@@ -39,12 +38,12 @@ class Simple2DClustering extends FunSuite {
   }
 
   test("Clustering does not remove duplicates") {
-    val elems = List(Point(0, 0), Point(1, 1), Point(0, 0), Point(1,1))
+    val elems = List(Point(0, 0), Point(1, 1), Point(0, 0), Point(1, 1))
 
     def distance(p1: Point, p2: Point): Double = {
       val dx = p1.x - p2.x
       val dy = p1.y - p2.y
-      Math.sqrt(dx*dx + dy*dy)
+      Math.sqrt(dx * dx + dy * dy)
     }
 
     val clustering = Clustering.cluster("", elems, distance _, 2)
@@ -53,20 +52,20 @@ class Simple2DClustering extends FunSuite {
     assert(ClusteringTestUtils.compareClusterings(clustering, expectedValue))
   }
 
-  test("Multi clustering") {
-    val elems = List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0,1))
+  test("Multi ch.epfl.clustering") {
+    val elems = List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0, 1))
 
     def distance(p1: Point, p2: Point): Double = {
       val dx = p1.x - p2.x
       val dy = p1.y - p2.y
-      Math.sqrt(dx*dx + dy*dy)
+      Math.sqrt(dx * dx + dy * dy)
     }
 
     val clustering = Clustering.cluster[Point]("", elems, distance _, 1 to 3)
     val expectedValue = List(
-      ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0,1))))),
-      ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0,1))))),
-      ClusteredStructure("", List(Cluster(List(Point(0, -0.4))), Cluster(List(Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0,1)))))
+      ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0, 1))))),
+      ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0, 1))))),
+      ClusteredStructure("", List(Cluster(List(Point(0, -0.4))), Cluster(List(Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0, 1)))))
     )
 
 
