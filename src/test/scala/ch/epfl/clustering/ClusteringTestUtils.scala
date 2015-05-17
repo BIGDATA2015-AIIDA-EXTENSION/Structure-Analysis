@@ -1,6 +1,4 @@
-package clustering
-
-import ch.epfl.clustering.{Cluster, ClusteredStructure}
+package ch.epfl.clustering
 
 /**
  * Created by lukas on 08/05/15.
