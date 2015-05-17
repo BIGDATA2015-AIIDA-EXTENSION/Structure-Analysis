@@ -1,4 +1,4 @@
-package ch.epfl.heatmaps
+package ch.epfl.mapgeneration
 
 import ch.epfl.structure._
 import org.apache.spark.SparkContext._
@@ -47,8 +47,10 @@ object MapGeneration {
     // Generation of the maps, one map per anonymousFormula and per pair of fixed values will be generated
     val groups = mapViewer.getMap(parsed)
 
+    // the name of the property used in the output will be SpaceGroupNumber
+    val propertyName = "SpaceGroupNumber"
     // Transforms the result into a better readable format and outputs it to the output location
-    groups.map(prettyOutput(fixedParams, axisX, axisY)).saveAsTextFile("hdfs://" + args(1))
+    groups.map(prettyOutput(fixedParams, axisX, axisY, propertyName)).saveAsTextFile("hdfs://" + args(1))
 
     // Terminates spark context
     sc.stop()
@@ -59,20 +61,23 @@ object MapGeneration {
    * @param fixed fixed parameters for this map
    * @param axisX parameter used as X axis
    * @param axisY parameter used as Y axis
+   * @param propertyName the name of the property used in the map, default is empty string
    * @param map actual map
    * @tparam T The type of the property kept in the map
    * @return A multiline String representing the map
    */
-  def prettyOutput[T](fixed : (MapAxis, MapAxis), axisX : MapAxis, axisY: MapAxis)
+  def prettyOutput[T](fixed: (MapAxis, MapAxis), axisX: MapAxis, axisY: MapAxis, propertyName: String = "")
                      (map: (MapID, List[(Double, Double, T)])): String = {
 
-    // Header that states which are the fixed parameters and their values and the anonymous formula
+    // Header that states which are the fixed parameters and their values, the anonymous formula, the varying parameters
+    // names and values and the name of the property
     val header = s"${fixed._1}: ${map._1.val1}\n" +
       s"${fixed._2}: ${map._1.val2}\n" +
-      s"Formula : ${map._1.anonymousFormula}\n"
+      s"Formula : ${map._1.anonymousFormula}\n" +
+      s"$axisX | $axisY | $propertyName\n"
     // all the properties in the map in csv format : x, y, property
     val properties = map._2.map(v => s"${v._1}, ${v._2}, ${v._3}").mkString("\n")
-    header + properties + "---------\n"
+    header + properties + "\n\n"
   }
 
 
@@ -119,7 +124,7 @@ case class MapElement[T](id: MapID, x: Double, y: Double, value: T)
 
 /**
  * Class containing all the logic to generate maps for a given set of parameters and a selected property.
- * @param fixedParams ixed parameters in the maps
+ * @param fixedParams fixed parameters in the maps
  * @param fixedValues values of the fixed parameters, every element in this list will lead to the generation of a
  *                    whole set of maps
  * @param mapAxisX parameter used as X axis
@@ -133,8 +138,8 @@ case class MapElement[T](id: MapID, x: Double, y: Double, value: T)
  * @tparam T the type of the interesting property
  */
 case class MapGenerator[T](fixedParams: (MapAxis, MapAxis), fixedValues: List[(Double, Double)],
-                        mapAxisX: MapAxis, mapAxisY: MapAxis,
-                        rangeX: Option[(Double, Double)] = None, rangeY: Option[(Double, Double)] = None)
+                           mapAxisX: MapAxis, mapAxisY: MapAxis,
+                           rangeX: Option[(Double, Double)] = None, rangeY: Option[(Double, Double)] = None)
                           (extractProperty: Structure => T) {
 
   /**
@@ -206,35 +211,74 @@ case class MapGenerator[T](fixedParams: (MapAxis, MapAxis), fixedValues: List[(D
      */
 
     def conjunction(functions: List[Structure => Boolean]): Structure => Boolean = {
-      s: Structure => functions.foldLeft(true){ case (acc, fun) => acc && fun(s)}
+      s: Structure => functions.foldLeft(true) { case (acc, fun) => acc && fun(s) }
     }
-
+    // This is a list of the boolean functions we need to filter
     val booleanFunctions = List(combinedCondition(fixedValues), isInRange(rangeX, mapAxisX), isInRange(rangeY, mapAxisY))
 
+    // Actual filtering of the RDD
     rdd.filter(conjunction(booleanFunctions))
   }
 
 
+  /**
+   * Generate the maps from a `RDD[Structure]` object. It does so by grouping all the comparable structures, dividing
+   * them into similar parameters structures, extracting the ones with lowest energy per site and putting them into maps
+   * @param rdd the structures to generate the maps
+   * @return an RDD containing the maps in the following format : map identifier, list of (x, y, property)
+   */
   def getMap(rdd: RDD[Structure]): RDD[(MapID, List[(Double, Double, T)])] = {
 
-    def groupCond(structure: Structure) = {
+    /**
+     * Generates a tuple containing only the fixed parameters values, the anonymous formula, the varying parameters and
+     * the AA parameter (which is never used as axis), this tuple will be used to group structures with other that have
+     * the same parameters
+     * @param structure the `Structure` that needs to be transformed
+     * @return the tuple
+     */
+    def paramsKey(structure: Structure) = {
       val p = structure.potential.params
-      (getAxisValue(fixedParams._1, p), getAxisValue(fixedParams._2, p), structure.anonymousFormula, getAxisValue(mapAxisX, p), getAxisValue(mapAxisY, p), structure.potential.params.aa)
+      (getAxisValue(fixedParams._1, p), getAxisValue(fixedParams._2, p), structure.anonymousFormula,
+        getAxisValue(mapAxisX, p), getAxisValue(mapAxisY, p), structure.potential.params.aa)
     }
 
+    /**
+     * Transforms a `Structure` into a `MapID`
+     * @param struct the `Structure` that needs to be transformed
+     * @return a `MapID` corresponding to the `Structure`
+     */
     def structToMapID(struct: Structure): MapID =
       MapID(getAxisValue(fixedParams._1, struct.potential.params), getAxisValue(fixedParams._2, struct.potential.params), struct.prettyFormula)
 
+    /**
+     * Transforms a `Structure` into a `MapElement`
+     * @param struct the `Structure` that needs to be transformed
+     * @return a `MapElement` corresponding to the `Structure`
+     */
     def structToMapElement(struct: Structure): MapElement[T] =
       MapElement[T](structToMapID(struct), getAxisValue(mapAxisX, struct.potential.params), getAxisValue(mapAxisY, struct.potential.params), extractProperty(struct))
 
+    // filters the structures
     val usefulStructures = getFilteredResults(rdd)
-    val structuresMappedToKeyValue = usefulStructures.map(s => (groupCond(s), s))
 
+    // for each structure generate a pair (paramsKey, structure)
+    val structuresMappedToKeyValue = usefulStructures.map(s => (paramsKey(s), s))
+
+    // reduceByKey generates an Iterable (not an RDD !) by grouping together the structures with the same key and
+    // then reducing each group by applying an operation to each pair of structures in the groups, this cooperation should
+    // return another structure, here we return the one with the smallest energyPerSite so that in the end we get only
+    // the one with the minimum energyPerSite for each group. Note that this reduction operation costs a lot, because
+    // it involves shuffling across the cluster but, the way spark is built, it will reduce on each node and then only send
+    // the minimums. of each node to be compared to the rest, this means that the communication load will be quite low.
+    // This kind of operation should be done with precaution, here it is okay because the result of the reduction is small
+    // compared to the initial data.
     val structuresWithMinEnergy = structuresMappedToKeyValue.reduceByKey { case (s1, s2) => if (s1.energyPerSite < s2.energyPerSite) s1 else s2 }
 
+    // This final transformation transforms the pair paramsKey, structure to a MapID, MapElement pair and then groups
+    // all said pair by MapID which results into an iterable that contains pairs made of MapID, list of (MapID, MapElement).
+    // This iterable is then transformed into the expected result which is a List of MapID, list of (x, y, property) pairs
     structuresWithMinEnergy.map { case (param_id, struct) => (structToMapID(struct), structToMapElement(struct)) }
-      .groupBy(_._1).map { case (id, iter) => (id, iter.map { case (k, v) => (v.x, v.y, v.value) }.toList) }
+      .groupBy(_._1).map { case (id, iterable) => (id, iterable.map { case (k, v) => (v.x, v.y, v.value) }.toList) }
 
   }
 }

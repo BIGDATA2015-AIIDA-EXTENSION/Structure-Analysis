@@ -2,7 +2,7 @@ package ch.epfl
 
 import ch.epfl.clustering.structure2d.AtomClustering
 import ch.epfl.comparison.Comparison
-import ch.epfl.heatmaps.MapGeneration
+import ch.epfl.mapgeneration.MapGeneration
 
 object Main {
 
