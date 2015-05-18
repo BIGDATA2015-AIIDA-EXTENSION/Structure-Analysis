@@ -1,6 +1,8 @@
 package ch.epfl.mapgeneration
 
 import ch.epfl.structure._
+import org.apache.hadoop.io.NullWritable
+import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
@@ -47,10 +49,10 @@ object MapGeneration {
     // Generation of the maps, one map per anonymousFormula and per pair of fixed values will be generated
     val groups = mapViewer.getMap(parsed)
 
-    // the name of the property used in the output will be SpaceGroupNumber
-    val propertyName = "SpaceGroupNumber"
-    // Transforms the result into a better readable format and outputs it to the output location
-    groups.map(prettyOutput(fixedParams, axisX, axisY, propertyName)).saveAsTextFile("hdfs://" + args(1))
+    // Transforms the result into a better readable format and outputs it to the output location using the formatter
+    // defined below
+    groups.map(prettyOutput).saveAsHadoopFile(args(1), classOf[MapID], classOf[String],
+      classOf[RDDMultipleTextOutputFormat])
 
     // Terminates spark context
     sc.stop()
@@ -58,29 +60,46 @@ object MapGeneration {
 
   /**
    * Transforms a map into a readable format
-   * @param fixed fixed parameters for this map
-   * @param axisX parameter used as X axis
-   * @param axisY parameter used as Y axis
-   * @param propertyName the name of the property used in the map, default is empty string
    * @param map actual map
    * @tparam T The type of the property kept in the map
    * @return A multiline String representing the map
    */
-  def prettyOutput[T](fixed: (MapAxis, MapAxis), axisX: MapAxis, axisY: MapAxis, propertyName: String = "")
-                     (map: (MapID, List[(Double, Double, T)])): String = {
-
-    // Header that states which are the fixed parameters and their values, the anonymous formula, the varying parameters
-    // names and values and the name of the property
-    val header = s"${fixed._1}: ${map._1.val1}\n" +
-      s"${fixed._2}: ${map._1.val2}\n" +
-      s"Formula : ${map._1.anonymousFormula}\n" +
-      s"$axisX | $axisY | $propertyName\n"
+  def prettyOutput[T] (map: (MapID, List[(Double, Double, T)])): (MapID,String) = {
     // all the properties in the map in csv format : x, y, property
     val properties = map._2.map(v => s"${v._1}, ${v._2}, ${v._3}").mkString("\n")
-    header + properties + "\n\n"
+    (map._1, properties)
   }
 
 
+}
+
+/**
+ * Formatting class to output each map in a different file
+ * The resulting maps are in a key-value format where the key a `MapID` and the map is transformed to a csv format multiline
+ * string.
+ * The use of type Any allows to perform some tricks that avoids spark outputting the MapID on each line of the file
+ */
+class RDDMultipleTextOutputFormat extends MultipleTextOutputFormat[Any, Any] {
+  /**
+   * Returns a `NullWritable` so that the key is not written on each line of the file.
+   * @param key the `MapID`
+   * @param value the value associated with the `MapID`
+   * @return a `NullWritable`
+   */
+  override def generateActualKey(key: Any, value: Any): Any =
+    NullWritable.get()
+
+  /**
+   * Generates a file name given a key-value pair
+   * @param key will be a `MapID`
+   * @param value a value
+   * @param name some string (not used here)
+   * @return THe name of the file in the format `anonymousFormula`-`fixedParameter1`-`fixedParameter2`
+   */
+  override def generateFileNameForKeyValue(key: Any, value: Any, name: String): String = {
+    val actKey = key.asInstanceOf[MapID]
+    s"${actKey.anonymousFormula}-${actKey.val1}-${actKey.val2}"
+  }
 }
 
 /**
