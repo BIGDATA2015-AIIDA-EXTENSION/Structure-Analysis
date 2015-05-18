@@ -200,6 +200,66 @@ object Comparison {
   }
 
   /**
+   * A spark job which finds all the pair of natural and synthetic
+   * structures which are similar.
+   *
+   * Results are saved in a text file as a list of pair of natural structure id
+   * and a list of similar synthetic structure ids: (String, List[String])
+   *
+   * Pros:
+   *  - More efficient with few natural structures
+   *
+   * Cons:
+   * - Inefficient with a lot of natural structures
+   *
+   * @param naturalsFile    File name for the natural structures
+   * @param syntheticsFile  File name for the synthetic structures
+   * @param outputFile      File name for output file
+   */
+  def findSimilar4(naturalsFile: String, syntheticsFile: String, outputFile: String): Unit = {
+    val conf = new SparkConf()
+      .setAppName("Finding Similar Structures")
+    val sc = new SparkContext(conf)
+
+    // Parse natural structures
+    // Keep the ones with less than 2 elements
+    // Normalize structures
+    val naturals = sc.textFile(naturalsFile)
+      .flatMap(NaturalStructureParser.parse)
+      .filter(_.nbElements <= 2)
+      .map(normalize)
+      .collect()
+
+    // Broadcast natural structures across nodes in a more efficient way
+    val naturalsBroadcast = sc broadcast naturals
+
+    // Parse synthetic structures
+    // Normalize structures
+    // Rename elements
+    val synthetics = sc.textFile(syntheticsFile)
+      .flatMap(StructureParser.parse)
+      .map(normalize)
+      .flatMap(renameSpecies)
+
+    // Cartesian product between synthetics and natural structures
+    // after renaming the natural structures
+    // Keep only the pair of similar ones
+    val similars = for {
+      synthetic <- synthetics
+      natural   <- naturalsBroadcast.value flatMap renameSpecies
+      if Comparator areSimilar (natural, synthetic)
+    } yield (natural.id, synthetic.id)
+
+
+    // Group all the pair with the same natural structure
+    val formatted = similars
+      .groupByKey()
+      .map { case (n, ss) => (n, ss.toList) }
+
+    formatted saveAsTextFile outputFile
+  }
+
+  /**
    * A spark job which finds all the similar synthetic structures.
    *
    * Results are saved in a text file as a list of pair of structure id
