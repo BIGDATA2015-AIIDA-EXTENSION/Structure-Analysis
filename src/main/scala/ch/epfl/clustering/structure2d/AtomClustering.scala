@@ -2,6 +2,7 @@ package ch.epfl.clustering.structure2d
 
 import ch.epfl.clustering.{ClusterMetric, Clustering, PlottingFormatter, ClusteredStructure}
 import ch.epfl.structure.{Structure, StructureParserIvano}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -169,11 +170,12 @@ object AtomClustering {
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
 
-    val parsed = jsonStructures flatMap StructureParserIvano.parse
+    val structs: RDD[String] = jsonStructures.repartition(sc.getExecutorMemoryStatus.size)
+    val parsed = structs flatMap StructureParserIvano.parse
     val parsedStruct = parsed.map(Structure.convertIvano).cache()
 
     val plotCluster = parsedStruct map(computeClusters(_, 3))
-    plotCluster.saveAsTextFile("hdfs://" + args(1))
+    plotCluster.saveAsTextFile(args(1))
     sc.stop()
   }
 
