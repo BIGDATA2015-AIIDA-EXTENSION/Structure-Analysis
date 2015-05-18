@@ -241,15 +241,17 @@ object Comparison {
       .map(normalize)
       .flatMap(renameSpecies)
 
+    // Rename natural structures
     // Cartesian product between synthetics and natural structures
-    // after renaming the natural structures
     // Keep only the pair of similar ones
-    val similars = for {
-      synthetic <- synthetics
-      natural   <- naturalsBroadcast.value flatMap renameSpecies
-      if Comparator areSimilar (natural, synthetic)
-    } yield (natural.id, synthetic.id)
-
+    val similars = synthetics mapPartitions { synths =>
+      val renamed = naturalsBroadcast.value flatMap renameSpecies
+      for {
+        synthetic <- synths
+        natural   <- renamed
+        if Comparator areSimilar (natural, synthetic)
+      } yield (natural.id, synthetic.id)
+    }
 
     // Group all the pair with the same natural structure
     val formatted = similars
@@ -334,7 +336,7 @@ object Comparison {
     val duplicates = structures
       .map(s => (s.prettyFormula, Map(s -> List[String]())))
       .reduceByKey(merge)
-      .flatMap ( _._2 collect { case (s, ds) if ds.nonEmpty => (s.id, ds) })
+      .flatMap (_._2 collect { case (s, ds) if ds.nonEmpty => (s.id, ds) })
 
     duplicates saveAsTextFile outputFile
   }
@@ -349,7 +351,7 @@ object Comparison {
     else if (dups2.isEmpty) dups1
     else {
       val head @ (s1, s1milar) = dups1.head
-      val sim = dups2 find (s2 => Comparator areSimilar(s1, s2._1))
+      val sim = dups2 find (s2 => Comparator areSimilar (s1, s2._1))
       sim match {
         case Some((s2, s2milar)) =>
           merge(dups1.tail, dups2 - s2) + (s1 -> (s2.id :: s1milar ::: s2milar))
