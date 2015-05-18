@@ -51,7 +51,7 @@ object MapGeneration {
 
     // Transforms the result into a better readable format and outputs it to the output location using the formatter
     // defined below
-    groups.map(prettyOutput).saveAsHadoopFile(args(1), classOf[MapID], classOf[String],
+    groups.map(prettyOutput[Int](fixedParams)).saveAsHadoopFile(args(1), classOf[FormatKey], classOf[String],
       classOf[RDDMultipleTextOutputFormat])
 
     // Terminates spark context
@@ -64,14 +64,51 @@ object MapGeneration {
    * @tparam T The type of the property kept in the map
    * @return A multiline String representing the map
    */
-  def prettyOutput[T] (map: (MapID, List[(Double, Double, T)])): (MapID,String) = {
+  def prettyOutput[T](fixed: (MapAxis, MapAxis))
+                     (map: (MapID, List[(Double, Double, T)])): (FormatKey, String) = {
     // all the properties in the map in csv format : x, y, property
     val properties = map._2.map(v => s"${v._1}, ${v._2}, ${v._3}").mkString("\n")
-    (map._1, properties)
+    (formatKeyFromMapIDAndFixedValues(map._1, fixed), properties)
   }
 
+  /**
+   * Generate the `FormatKey` given the map id and the fixed value used for this map
+   * @param mapId the map id
+   * @param fixed the fixed values for this map
+   * @return a format key that will be used by the output formatter
+   */
+  def formatKeyFromMapIDAndFixedValues(mapId: MapID, fixed: (MapAxis, MapAxis)): FormatKey = {
+    /**
+     * Checks if this particular value is fixed, if so returns the value
+     * @param mapAxis the value to check
+     * @return the value of the fixed parameter if it is fixed, None if not
+     */
+    def fixedValue(mapAxis: MapAxis): Option[String] = {
+      if (fixed._1 == mapAxis) {
+        Some(mapId.val1.toString)
+      } else if (fixed._2 == mapAxis) {
+        Some(mapId.val2.toString)
+      } else {
+        None
+      }
+    }
+
+    FormatKey(mapId, fixedValue(ABEpsilon), fixedValue(BBEpsilon), fixedValue(ABSigma), fixedValue(BBSigma))
+  }
 
 }
+
+/**
+ * A key used so that the formatter can generate the right file name, it is a transformation of the mapID based on the
+ * map generator parameters
+ * @param mapId the id of the map
+ * @param eabFixed value of epsilon_ab if fixed else None
+ * @param ebbFixed value of epsilon_bb if fixed else None
+ * @param sabFixed value of sigma_ab if fixed else None
+ * @param sbbFixed value of sigma_bb if fixed else None
+ */
+case class FormatKey(mapId: MapID, eabFixed: Option[String], ebbFixed: Option[String], sabFixed: Option[String], sbbFixed: Option[String])
+
 
 /**
  * Formatting class to output each map in a different file
@@ -94,11 +131,12 @@ class RDDMultipleTextOutputFormat extends MultipleTextOutputFormat[Any, Any] {
    * @param key will be a `MapID`
    * @param value a value
    * @param name some string (not used here)
-   * @return THe name of the file in the format `anonymousFormula`-`fixedParameter1`-`fixedParameter2`
+   * @return THe name of the file in the format `anonymousFormula`-eess
    */
   override def generateFileNameForKeyValue(key: Any, value: Any, name: String): String = {
-    val actKey = key.asInstanceOf[MapID]
-    s"${actKey.anonymousFormula}-${actKey.val1}-${actKey.val2}"
+    val formatKey = key.asInstanceOf[FormatKey]
+    s"${formatKey.mapId.anonymousFormula}-e${formatKey.eabFixed.getOrElse("")}e${formatKey.ebbFixed.getOrElse("")}" +
+      s"s${formatKey.sabFixed.getOrElse("")}s${formatKey.sbbFixed.getOrElse("")}"
   }
 }
 
