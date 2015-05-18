@@ -3,14 +3,36 @@ import scala.collection.mutable.{HashMap => MHashMap}
 
 /**
  * Created by lukas on 07/05/15.
+ *
  */
 object Clustering {
 
+  /**
+   *
+   * This function clusters a list of elements of type T.
+   *
+   * @param id The id of the clustering
+   * @param elems The list of elements to cluster
+   * @param distance The distance function used to cluster the elements
+   * @param nbCluster The expected number of clusters as Int
+   * @tparam T The type of the elements to cluster
+   * @return A ClusteredStructure that represents the clustering
+   */
   def cluster[T](id: String, elems: List[T], distance: (T, T) => Double, nbCluster: Int): ClusteredStructure[T] = {
     cluster[T](id, elems, distance, nbCluster to nbCluster).head
   }
 
-
+  /**
+   *
+   * This function clusters a list of elements of type T.
+   *
+   * @param id The id of the clustering
+   * @param elems The list of elements to cluster
+   * @param distance The distance function used to cluster the elements
+   * @param nbCluster The expected number of clusters as a Range
+   * @tparam T The type of the elements to cluster
+   * @return A list of ClusteredStructure that represents the clustering for each number of cluster given in the range.
+   */
   def cluster[T](id: String, elems: List[T], distance: (T, T) => Double, nbCluster: Range): List[ClusteredStructure[T]] = {
 
     if(nbCluster.start < 1 || nbCluster.end > elems.size)
@@ -94,7 +116,20 @@ object Clustering {
   }
 }
 
-
+/**
+ * Case class that represents a clustering. It has an id and a list of clusters.
+ *
+ * @param id id of the clustering
+ * @param clusters list of clusters
+ * @tparam T is the type of the elements that are clustered.
+ */
 case class ClusteredStructure[T](id: String, clusters: List[Cluster[T]])
 
+
+/**
+ * Case class that represents a cluster. A cluster has a list of elements that it contains. These elements are of type T
+ *
+ * @param elems list of elements in this cluster
+ * @tparam T type of the elements of the cluster
+ */
 case class Cluster[T](elems: List[T])

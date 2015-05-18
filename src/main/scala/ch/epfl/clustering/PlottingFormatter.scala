@@ -4,10 +4,13 @@ import play.api.libs.json.Json
 
 /**
  * Created by lukas on 07/05/15.
+ *
+ * This object can be used to output the clustering to the format that the python plotter understands.
+ *
  */
 object PlottingFormatter {
-  def toPlot[T](clusterings: ClusteredStructure[T], info: Option[String], toVector: (T) => Vector[Double]): String = {
-    toPlot(clusterings :: Nil, info, Nil, toVector)
+  def toPlot[T](clustering: ClusteredStructure[T], info: Option[String], toVector: (T) => Vector[Double]): String = {
+    toPlot(clustering :: Nil, info, Nil, toVector)
   }
 
   def toPlot[T](clusterings: List[ClusteredStructure[T]], info: Option[String], metric: ClusterMetric, toVector: (T) => Vector[Double]): String = {
