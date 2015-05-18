@@ -80,7 +80,7 @@ object Comparison {
       .map(_._2)
       .filter { case (n, s) => Comparator.areSimilar(n, s) }
       .groupByKey()
-      .map { case (n, ss) => (n.id, ss.map(_.id).toList) }
+      .map { case (n, ss) => (n.id, ss map(_.id) mkString ", ") }
 
     similars saveAsTextFile outputFile
   }
@@ -141,7 +141,7 @@ object Comparison {
       .filter { case (n, s) => Comparator.areSimilar(n._2, s._2) }
       .map { case (n, s) => (n._1, s._1) }
       .groupByKey()
-      .map { case (n, ss) => (n, ss.toList) }
+      .map { case (n, ss) => (n, ss mkString ", ") }
 
     similars saveAsTextFile outputFile
   }
@@ -194,7 +194,7 @@ object Comparison {
       .filter { case (n, s) => Comparator.areSimilar(n, s) }
       .map { case (n, s) => (n.id, s.id) }
       .groupByKey()
-      .map { case (n, ss) => (n, ss.toList) }
+      .map { case (n, ss) => (n, ss mkString ", ") }
 
     similars saveAsTextFile outputFile
   }
@@ -256,7 +256,7 @@ object Comparison {
     // Group all the pair with the same natural structure
     val formatted = similars
       .groupByKey()
-      .map { case (n, ss) => (n, ss.toList) }
+      .map { case (n, ss) => (n, ss mkString ", ") }
 
     formatted saveAsTextFile outputFile
   }
@@ -297,7 +297,7 @@ object Comparison {
       .map(_._2)
       .filter { case (s1, s2) => Comparator.areSimilar(s1, s2) }
       .groupByKey()
-      .map { case (n, ss) => (n.id, ss.map(_.id).toList) }
+      .map { case (n, ss) => (n.id, ss map (_.id) mkString ", ") }
 
     duplicates saveAsTextFile outputFile
   }
