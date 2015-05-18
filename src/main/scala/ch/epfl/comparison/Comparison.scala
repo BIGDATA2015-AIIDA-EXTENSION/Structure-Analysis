@@ -153,9 +153,11 @@ object Comparison {
    * Results are saved in a text file as a list of pair of natural structure id
    * and a list of similar synthetic structure ids: (String, List[String])
    *
+   * Pros:
+   *  - Good repartition across the nodes after the cartesian product
+   *
    * Cons:
    *  - Redundant computations
-   *  - Good repartition across the nodes after the cartesian product
    *
    * @param naturalsFile    File name for the natural structures
    * @param syntheticsFile  File name for the synthetic structures
