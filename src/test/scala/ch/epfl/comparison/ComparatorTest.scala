@@ -80,7 +80,7 @@ class ComparatorTest extends FunSuite {
 
     distances foreach {
       case (ids, (dist, err)) =>
-        println(s"$ids -> distance=$dist, \terror=$err")
+        assert(err < Comparator.TOLERANCE)
     }
   }
 }

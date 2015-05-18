@@ -1,7 +1,8 @@
 package ch.epfl.clustering.structure2d
 
+
 import ch.epfl.clustering.{ClusterMetric, ClusteredStructure, Clustering, PlottingFormatter}
-import ch.epfl.structure.{Structure, StructureParserIvano}
+import ch.epfl.structure.{NaturalStructureParser, Structure}
 import org.apache.spark.{SparkConf, SparkContext}
 
 object AtomClustering {
@@ -138,10 +139,9 @@ object AtomClustering {
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
 
-    val parsed = jsonStructures flatMap StructureParserIvano.parse
-    val parsedStruct = parsed.map(Structure.convertIvano).cache()
+    val parsed = (jsonStructures flatMap NaturalStructureParser.parse).cache()
 
-    val plotCluster = parsedStruct map(computeClusters(_, 3))
+    val plotCluster = parsed map(computeClusters(_, 3))
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
   }
@@ -152,10 +152,9 @@ object AtomClustering {
 
     val jsonStructures = sc.textFile("hdfs://" + args(0))
 
-    val parsed = jsonStructures flatMap StructureParserIvano.parse
-    val parsedStruct = parsed.map(Structure.convertIvano).cache()
+    val parsed = (jsonStructures flatMap NaturalStructureParser.parse).cache()
 
-    val plotCluster = parsedStruct.map(s => (s.id, is2D(s, 3)))
+    val plotCluster = parsed.map(s => (s.id, is2D(s, 3)))
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
   }
