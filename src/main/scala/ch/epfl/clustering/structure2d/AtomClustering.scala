@@ -1,7 +1,7 @@
 package ch.epfl.clustering.structure2d
 
 import ch.epfl.clustering.{ClusterMetric, ClusteredStructure, Clustering, PlottingFormatter}
-import ch.epfl.structure.{Structure, StructureParserIvano}
+import ch.epfl.structure.{NaturalStructureParser, Structure}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -155,22 +155,24 @@ object AtomClustering {
   def compute(args: Array[String]) = {
     val MAX_ATOMS_IN_STRUCTURE = 40
 
+
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
     //Reads the input file line by line
     val jsonStructures = sc.textFile("hdfs://" + args(0))
 
+
     // Sends the data across executors
     val structs: RDD[String] = jsonStructures.repartition(sc.getExecutorMemoryStatus.size)
 
     //Here we parse the ivano structures and convert them to the structure case class we defined.
-    val parsed = structs flatMap StructureParserIvano.parse
-    val parsedStruct = parsed.map(Structure.convertIvano).cache()
+    val parsedStruct = structs flatMap NaturalStructureParser.parse
 
     //We filter the structures to keep only the structures with 'MAX_ATOMS_IN_STRUCTURE' or less and apply the clustering
     val plotCluster = parsedStruct.filter(_.struct.sites.size <= MAX_ATOMS_IN_STRUCTURE).map(computeClusters(_, 3))
 
     // Finally we save the result to a file
+
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
   }

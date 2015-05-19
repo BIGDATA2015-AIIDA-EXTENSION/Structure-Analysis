@@ -8,9 +8,9 @@ object Comparator {
   type ComparisonData = Map[(String, String), Seq[Double]]
 
   val MAX_CELL_MULTIPLES = 256
-  val MAX_VALUES = 10000
-  val CUTOFF_FACTOR = 1.5
-  val TOLERANCE = 3e-4
+  val MAX_VALUES         = 10000
+  val CUTOFF_FACTOR      = 1.5
+  val TOLERANCE          = 3e-4
 
   /**
    * @return true if two structure are similar, false otherwise
@@ -124,9 +124,7 @@ object Comparator {
       outVec = rAB + unitCell.c * c.toDouble + dR
       testDistSq = outVec dot outVec
       if testDistSq < cutoffSq
-    } yield {
-        Math.sqrt(testDistSq)
-      }
+    } yield Math.sqrt(testDistSq)
 
     val results = resultStream take MAX_VALUES
 

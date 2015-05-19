@@ -2,6 +2,7 @@ package ch.epfl.clustering.structure2d
 
 import breeze.linalg._
 import ch.epfl.clustering.Cluster
+
 import scala.collection.immutable.Vector
 
 object Helpers {
