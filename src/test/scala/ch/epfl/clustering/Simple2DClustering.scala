@@ -63,6 +63,7 @@ class Simple2DClustering extends FunSuite {
 
     val clustering = Clustering.cluster[Point]("", elems, distance _, 1 to 3)
     val expectedValue = List(
+
       ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0, 1))))),
       ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0, 1))))),
       ClusteredStructure("", List(Cluster(List(Point(0, -0.4))), Cluster(List(Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0, 1)))))
