@@ -130,12 +130,13 @@ object AtomClustering {
     val atoms = atomsFromStructure(struct, inflation)
     val maxClusterNumber = Math.ceil(Math.sqrt(atoms.length/2)).toInt
     val clusterings = Clustering.cluster(struct.id, atoms, distance _, 1 to maxClusterNumber)
-    
+
+    //Here we apply the different metrics to our clusterings
     val rankMetric = clusterings.map(computeRankMetric(_).toDouble)
     val clusterSizeMetric = clusterings.map(computeClusterSizeMetric)
     val planeMetric = clusterings.map(computeRegressionMetric)
 
-
+    // We zip the metrics with indexes to be able to plot them
     val rankMetricWithIndex = rankMetric.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
     val clusterSizeMetricWithIndex = clusterSizeMetric.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
     val planeMetricWithIndex = planeMetric.zipWithIndex.map{ case (v, i) => ((i+1).toDouble, v) }
@@ -151,30 +152,25 @@ object AtomClustering {
       (a:Atom) => a.position)
   }
 
-
-
-  def multiCLuster(s: Structure, inflation: Int): List[(Int, Int, ClusteredStructure[Atom])] = {
-    val bigStructure = atomsFromStructure(s, inflation)
-    val maxClusters = Math.ceil(Math.sqrt(bigStructure.length) / 2).toInt
-    (1 until (maxClusters + 1)).map {
-      nb =>
-        val clusteredStructure = Clustering.cluster[Atom](s.id, bigStructure, distance _, nb)
-        val metric = computeRankMetric(clusteredStructure)
-        (nb, metric, clusteredStructure)
-    }.toList
-  }
-
   def compute(args: Array[String]) = {
+    val MAX_ATOMS_IN_STRUCTURE = 40
+
     val sc = new SparkContext(new SparkConf().setAppName("AiidaComputations"))
 
+    //Reads the input file line by line
     val jsonStructures = sc.textFile("hdfs://" + args(0))
 
+    // Sends the data across executors
     val structs: RDD[String] = jsonStructures.repartition(sc.getExecutorMemoryStatus.size)
+
+    //Here we parse the ivano structures and convert them to the structure case class we defined.
     val parsed = structs flatMap StructureParserIvano.parse
     val parsedStruct = parsed.map(Structure.convertIvano).cache()
 
+    //We filter the structures to keep only the structures with 'MAX_ATOMS_IN_STRUCTURE' or less and apply the clustering
+    val plotCluster = parsedStruct.filter(_.struct.sites.size <= MAX_ATOMS_IN_STRUCTURE).map(computeClusters(_, 3))
 
-    val plotCluster = parsedStruct.filter(_.struct.sites.size <= 40) map(computeClusters(_, 3))
+    // Finally we save the result to a file
     plotCluster.saveAsTextFile("hdfs://" + args(1))
     sc.stop()
   }
