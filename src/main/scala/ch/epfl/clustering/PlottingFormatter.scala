@@ -23,8 +23,6 @@ object PlottingFormatter {
   
   def toPlot[T](clusterings: List[ClusteredStructure[T]], info: Option[String], metrics: List[ClusterMetric], toVector: (T) => Vector[Double]): String = {
 
-
-
     implicit val pointWrites = Json.writes[PlottingFormatter.Point]
     implicit val metricWrites = Json.writes[PlottingFormatter.Metric]
     implicit val outputWrites = Json.writes[PlottingFormatter.Output]

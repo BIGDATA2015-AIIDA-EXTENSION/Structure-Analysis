@@ -38,15 +38,24 @@ object Clustering {
     if(nbCluster.start < 1 || nbCluster.end > elems.size)
       sys.error(s"$nbCluster is not a valid cluster number for ${elems.size} elements.")
 
+    // We zip every element with it's id to make it unique
     type S = (T, Int)
     val elements = elems.zipWithIndex
+
+    // This map keeps a mapping from an element to it's cluster's id
     val elemInCluster = MHashMap[S, Int]()
+    // This map has a mapping from cluster id to cluster
     val clusters = MHashMap[Int, Clust]()
     val nbElems = elems.size
     val nbDist = nbElems*(nbElems-1)/2
+
+    //This is an Array of all pairwise distances
     var distances = new Array[DistHolder](nbDist)
+
+    //This is the list of results
     var clusterings = List[ClusteredStructure[T]]()
 
+    // Case class that represents a Cluster and has a method to merge itself with another cluster
     case class Clust(id: Int, var elems: List[S]) {
 
       def fusionCluster(cl: Clust): Unit = {
@@ -54,6 +63,7 @@ object Clustering {
       }
 
     }
+    // Case class that holds the distance between two elements
     case class DistHolder(e1: S, e2: S, distance: Double) {
       def sameCluster(): Boolean = {
         val e1Id = elemInCluster.get(e1).get
@@ -75,14 +85,17 @@ object Clustering {
     }
 
     def clusterize(): List[Clust] = {
+      // We compute the number of merges we need to do
       var nbIter = nbElems - nbCluster.start
       var index = 0
 
       while(nbIter > 0) {
+        //We iterate through the distances but ignore them if the elements are already in the same cluster
         while(distances(index).sameCluster()) index +=1
         val cl1 = distances(index).getElem1Cluster
         val cl2 = distances(index).getElem2Cluster
 
+        // We fusion the two clusters
         cl1.fusionCluster(cl2)
 
         cl2.elems.foreach(e => elemInCluster.put(e, cl1.id))
@@ -91,6 +104,7 @@ object Clustering {
         index +=1
         nbIter -=1
 
+        //If this number of cluster is in the range we want as output we add it to the result list
         if(nbCluster.contains(clusters.size)) {
           clusterings = dataToClusteredStruct() :: clusterings
         }
