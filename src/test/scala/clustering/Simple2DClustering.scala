@@ -17,8 +17,8 @@ class Simple2DClustering extends FunSuite {
       Math.sqrt(dx*dx + dy*dy)
     }
 
-    val clustering = Clustering.cluster(elems, distance _, 2)
-    val expectedValue = ClusteredStructure(List(Cluster(List(Point(0, 0.5), Point(0, 1))), Cluster(List(Point(0, -1)))))
+    val clustering = Clustering.cluster("", elems, distance _, 2)
+    val expectedValue = ClusteredStructure("", List(Cluster(List(Point(0, 0.5), Point(0, 1))), Cluster(List(Point(0, -1)))))
 
     assert(ClusteringTestUtils.compareClusterings(clustering, expectedValue))
   }
@@ -32,8 +32,8 @@ class Simple2DClustering extends FunSuite {
       Math.sqrt(dx*dx + dy*dy)
     }
 
-    val clustering = Clustering.cluster(elems, distance _, 1)
-    val expectedValue = ClusteredStructure(List(Cluster(List(Point(0, 0.5), Point(0, 1), Point(0, -1)))))
+    val clustering = Clustering.cluster("", elems, distance _, 1)
+    val expectedValue = ClusteredStructure("", List(Cluster(List(Point(0, 0.5), Point(0, 1), Point(0, -1)))))
 
     assert(ClusteringTestUtils.compareClusterings(clustering, expectedValue))
   }
@@ -47,8 +47,8 @@ class Simple2DClustering extends FunSuite {
       Math.sqrt(dx*dx + dy*dy)
     }
 
-    val clustering = Clustering.cluster(elems, distance _, 2)
-    val expectedValue = ClusteredStructure(List(Cluster(List(Point(0, 0), Point(0, 0))), Cluster(List(Point(1, 1), Point(1, 1)))))
+    val clustering = Clustering.cluster("", elems, distance _, 2)
+    val expectedValue = ClusteredStructure("", List(Cluster(List(Point(0, 0), Point(0, 0))), Cluster(List(Point(1, 1), Point(1, 1)))))
 
     assert(ClusteringTestUtils.compareClusterings(clustering, expectedValue))
   }
@@ -62,11 +62,11 @@ class Simple2DClustering extends FunSuite {
       Math.sqrt(dx*dx + dy*dy)
     }
 
-    val clustering = Clustering.cluster[Point](elems, distance _, 1 to 3)
+    val clustering = Clustering.cluster[Point]("", elems, distance _, 1 to 3)
     val expectedValue = List(
-      ClusteredStructure(List(Cluster(List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0,1))))),
-      ClusteredStructure(List(Cluster(List(Point(0, -0.4), Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0,1))))),
-      ClusteredStructure(List(Cluster(List(Point(0, -0.4))), Cluster(List(Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0,1)))))
+      ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1), Point(0, 0.6), Point(0,1))))),
+      ClusteredStructure("", List(Cluster(List(Point(0, -0.4), Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0,1))))),
+      ClusteredStructure("", List(Cluster(List(Point(0, -0.4))), Cluster(List(Point(0, -1))), Cluster(List(Point(0, 0.6), Point(0,1)))))
     )
 
 
